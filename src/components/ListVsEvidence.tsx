@@ -85,8 +85,8 @@ export default function ListVsEvidence() {
                   <div className="text-sm text-slate-500">7,200 employees · Austin, TX</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-orange-500">High</div>
-                  <div className="text-[10px] font-semibold tracking-[0.14em] text-slate-400">INTENT</div>
+                  <div className="text-2xl font-bold text-orange-600">High</div>
+                  <div className="text-[10px] font-semibold tracking-[0.14em] text-slate-500">INTENT</div>
                 </div>
               </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-indigo-100">
@@ -113,9 +113,9 @@ export default function ListVsEvidence() {
                       <Icon className="h-3.5 w-3.5" />
                     </span>
                     <div className="min-w-0">
-                      <div className="text-[11px] font-semibold text-orange-600">{label}</div>
+                      <div className="text-[11px] font-semibold text-orange-700">{label}</div>
                       <div className="text-sm text-slate-800">{text}</div>
-                      <div className="flex items-center gap-1 text-xs text-slate-400">
+                      <div className="flex items-center gap-1 text-xs text-slate-500">
                         <Link2 className="h-3 w-3" />
                         {source}
                       </div>
@@ -126,7 +126,7 @@ export default function ListVsEvidence() {
 
               <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
                 <div className="rounded-xl border border-orange-100 bg-orange-50/70 px-3 py-2.5">
-                  <div className="text-[10px] font-semibold tracking-[0.16em] text-orange-600">WHY NOW</div>
+                  <div className="text-[10px] font-semibold tracking-[0.16em] text-orange-700">WHY NOW</div>
                   <div className="mt-0.5 text-sm text-slate-800">Fresh capital and a new revenue leader with budget.</div>
                 </div>
                 <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2.5">

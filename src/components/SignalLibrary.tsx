@@ -50,7 +50,7 @@ export default function SignalLibrary() {
                 <h3 className="mt-4 font-semibold text-slate-900">{name}</h3>
                 <p className="mt-1 text-sm text-slate-500">{look}</p>
                 <div className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                  <span className="font-semibold text-orange-500">e.g.</span> {example}
+                  <span className="font-semibold text-orange-700">e.g.</span> {example}
                 </div>
               </motion.div>
             ))}

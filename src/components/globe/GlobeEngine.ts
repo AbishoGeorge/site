@@ -142,6 +142,8 @@ export class GlobeEngine {
   private tags: (Tag | null)[] = [];
   private nextTag = 0;
   private tagLabel = 0;
+  /** Fades every tag in with 'show' and out with the card, so none ride along on a flight. */
+  private tagVis = 0;
 
   private raf = 0;
   private last = 0;
@@ -329,7 +331,7 @@ export class GlobeEngine {
       s1: s.zoom,
       dur: this.opts.reducedMotion ? 1.2 : 3.0 + 0.8 * clamp01(dist / 120),
     };
-    this.target = toVec(s.lat, s.lng);
+    // `target` stays on the city just shown so its pin and highlight fade out in place; it moves on arrival.
     this.setPhase('fly');
   }
 
@@ -350,7 +352,8 @@ export class GlobeEngine {
 
     switch (this.phase) {
       case 'intro':
-        this.cLng += (this.opts.reducedMotion ? 2 : 10) * dt;
+        // Spin eases to rest so the first flight starts from still, not from a sudden stop.
+        this.cLng += (this.opts.reducedMotion ? 2 : 10) * dt * (1 - smoothstep((this.phaseT - INTRO_TIME * 0.3) / (INTRO_TIME * 0.7)));
         if (this.phaseT > INTRO_TIME) this.startFly();
         break;
       case 'fly': {
@@ -361,7 +364,9 @@ export class GlobeEngine {
         this.cLat = lat;
         this.scale = this.opts.reducedMotion ? lerp(this.fly.s0, this.fly.s1, easeInOutSine(t)) : this.flightScale(t);
         if (t >= 1) {
-          this.hlCountry = this.countryIndexByName.get(this.opts.signals[this.index].country) ?? -1;
+          const s = this.opts.signals[this.index];
+          this.target = toVec(s.lat, s.lng);
+          this.hlCountry = this.countryIndexByName.get(s.country) ?? -1;
           this.arriveAt = this.time;
           this.setPhase('arrive');
         }
@@ -400,7 +405,8 @@ export class GlobeEngine {
     }
 
     // While a signal is open, a few other cities flash short tags.
-    if (this.phase === 'show' && this.time > this.nextTag) {
+    this.tagVis = clamp01(this.tagVis + (this.phase === 'show' ? dt / 0.3 : -dt / 0.3));
+    if (this.phase === 'show' && this.phaseT < SHOW_TIME - 1.2 && this.time > this.nextTag) {
       this.nextTag = this.time + 0.9 + Math.random() * 0.5;
       this.spawnTag();
     }
@@ -434,7 +440,9 @@ export class GlobeEngine {
       const d = angle(v, this.target);
       if (d < 4 || d > 45) continue;
       this.project(v[0], v[1], v[2], p);
-      if (p[2] < 0.3 || p[0] < 70 || p[0] > this.W - 70 || p[1] < 70 || p[1] > this.H - 90) continue;
+      // On wide screens the left half holds the hero copy.
+      const minX = this.wide ? this.W * 0.56 : 70;
+      if (p[2] < 0.3 || p[0] < minX || p[0] > this.W - 70 || p[1] < 70 || p[1] > this.H - 90) continue;
       // Keep clear of the signal card, which hangs right of the pin (or below it on narrow screens).
       const dxp = p[0] - pin[0];
       const dyp = p[1] - pin[1];
@@ -619,7 +627,7 @@ export class GlobeEngine {
       let warm = 0;
       if (hlOn || this.pin > 0) {
         const c = X * Tx + Y * Ty + Z * Tz;
-        if (hlOn && this.dCountry[i] === this.hlCountry && c > cosReveal) warm = 0.6 * this.hl;
+        if (hlOn && this.dCountry[i] === this.hlCountry && c > cosReveal) warm = 0.85 * this.hl;
         if (ripple >= 0 && this.pin > 0 && c > cosRipple) {
           const d = Math.acos(Math.min(1, c)) / DEG;
           const band = 1 - Math.abs(d - ripple) / 1.2;
@@ -633,7 +641,6 @@ export class GlobeEngine {
         this.warmXY[o + 2] = warm;
         this.warmXY[o + 3] = level;
         this.warmCount++;
-        continue;
       }
       let b = depth > 0.8 ? 4 : Math.floor(depth * 5);
       if (b < 4 && X * swX + Y * swY > 0.985) b++;
@@ -672,7 +679,8 @@ export class GlobeEngine {
       const a = Math.min(1, this.warmXY[o + 2]);
       const level = this.warmXY[o + 3];
       const size = Math.max(1, R * DOT_STEPS[level] * DEG * 0.32) * (1 + 0.45 * a);
-      ctx.fillStyle = `rgba(${WARM}, ${(0.35 + 0.65 * a) * levelAlpha[level]})`;
+      // Drawn over the indigo dot, so orange blends in and out from zero rather than swapping colour.
+      ctx.fillStyle = `rgba(${WARM}, ${a * levelAlpha[level]})`;
       ctx.beginPath();
       ctx.arc(this.warmXY[o], this.warmXY[o + 1], size / 2, 0, TAU);
       ctx.fill();
@@ -703,12 +711,13 @@ export class GlobeEngine {
       const v = this.hubs[t.hub];
       if (!this.project(v[0], v[1], v[2], p) || p[2] <= 0) continue;
       const ring = (age * 2.2) % 1;
-      ctx.strokeStyle = `rgba(${VIOLET}, ${0.5 * (1 - ring)})`;
+      const vis = this.tagVis * Math.max(0, Math.min(1, age / 0.12, (1 - age) / 0.18));
+      ctx.strokeStyle = `rgba(${VIOLET}, ${0.5 * (1 - ring) * vis})`;
       ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.arc(p[0], p[1], 3 + ring * 14, 0, TAU);
       ctx.stroke();
-      ctx.fillStyle = `rgba(${VIOLET}, 0.95)`;
+      ctx.fillStyle = `rgba(${VIOLET}, ${0.95 * vis})`;
       ctx.beginPath();
       ctx.arc(p[0], p[1], 2.6, 0, TAU);
       ctx.fill();
@@ -758,7 +767,7 @@ export class GlobeEngine {
         prevOk = ok;
       }
       if (age < 1.5 && at(head, p)) {
-        ctx.fillStyle = `rgba(${VIOLET}, ${0.9 * fade})`;
+        ctx.fillStyle = `rgba(${VIOLET}, ${0.9 * fade * (1 - smoothstep((age - 1.2) / 0.3))})`;
         ctx.beginPath();
         ctx.arc(p[0], p[1], 2.2, 0, TAU);
         ctx.fill();
@@ -774,14 +783,15 @@ export class GlobeEngine {
       const s = this.opts.signals[idx];
       const v = toVec(s.lat, s.lng);
       if (!this.project(v[0], v[1], v[2], p) || p[2] <= 0) continue;
+      const va = idx === this.visited[this.visited.length - 1] ? 1 - this.pin : 1;
       const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 9);
-      g.addColorStop(0, `rgba(${WARM_SOFT}, 0.45)`);
+      g.addColorStop(0, `rgba(${WARM_SOFT}, ${0.45 * va})`);
       g.addColorStop(1, `rgba(${WARM_SOFT}, 0)`);
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(p[0], p[1], 9, 0, TAU);
       ctx.fill();
-      ctx.fillStyle = `rgba(${WARM}, 0.95)`;
+      ctx.fillStyle = `rgba(${WARM}, ${0.95 * va})`;
       ctx.beginPath();
       ctx.arc(p[0], p[1], 2.2, 0, TAU);
       ctx.fill();
@@ -848,11 +858,13 @@ export class GlobeEngine {
         return;
       }
       const v = this.hubs[t.hub];
-      const visible = this.project(v[0], v[1], v[2], p) && p[2] > 0.1;
+      const visible = this.project(v[0], v[1], v[2], p) && p[2] > 0.1 && this.tagVis > 0;
       const fade = Math.min(1, age / 0.12, (1 - age) / 0.18);
       const rise = (1 - easeOutCubic(Math.min(1, age / 0.15))) * 6;
       el.style.transform = `translate3d(${p[0].toFixed(1)}px, ${(p[1] - 10 + rise).toFixed(1)}px, 0)`;
-      el.style.opacity = visible ? String(Math.max(0, fade)) : '0';
+      // Fade out as the city nears the globe's edge instead of vanishing when it crosses over.
+      const edge = clamp01((p[2] - 0.1) / 0.15);
+      el.style.opacity = visible ? String(Math.max(0, fade) * edge * this.tagVis) : '0';
     });
   }
 }

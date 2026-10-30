@@ -73,7 +73,11 @@ export default function SignalGlobe() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-4 top-4 flex justify-center sm:inset-x-6 sm:top-6 sm:justify-end xl:left-[54%] xl:right-8"
       >
-        <div className="flex items-center gap-2 rounded-full border border-indigo-100 bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm shadow-indigo-900/5 backdrop-blur">
+        <motion.div
+          layout
+          transition={{ layout: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }}
+          className="flex items-center gap-2 rounded-full border border-indigo-100 bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm shadow-indigo-900/5 backdrop-blur"
+        >
           <span className="relative flex h-2 w-2">
             <span
               className={`absolute inline-flex h-full w-full rounded-full opacity-70 ${
@@ -82,19 +86,23 @@ export default function SignalGlobe() {
             />
             <span className={`relative inline-flex h-2 w-2 rounded-full ${found ? 'bg-orange-500' : 'bg-indigo-500'}`} />
           </span>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={statusText(phase, signal)}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.25 }}
-              className="whitespace-nowrap"
-            >
-              {statusText(phase, signal)}
-            </motion.span>
-          </AnimatePresence>
-        </div>
+          {/* Crossfade: the outgoing label lifts out of flow so the pill never goes blank. */}
+          <span className="relative">
+            <AnimatePresence initial={false}>
+              <motion.span
+                key={statusText(phase, signal)}
+                layout="position"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4, position: 'absolute', left: 0, top: 0 }}
+                transition={{ duration: 0.3 }}
+                className="block whitespace-nowrap"
+              >
+                {statusText(phase, signal)}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+        </motion.div>
       </div>
 
       {/* Short tags at other cities, positioned and filled by the engine. */}
@@ -132,7 +140,7 @@ function SignalCard({ signal }: { signal: ExampleSignal }) {
   const words = signal.headline.split(' ');
 
   return (
-    <div className="absolute left-0 top-0 w-[min(300px,calc(100vw-40px))] -translate-x-1/2 pt-9 xl:-translate-y-1/2 xl:translate-x-0 xl:pl-10 xl:pt-0"
+    <div className="absolute left-0 top-0 w-[min(300px,calc(100vw-64px))] -translate-x-1/2 pt-9 xl:-translate-y-1/2 xl:translate-x-0 xl:pl-10 xl:pt-0"
     >
       {/* Leader line from the pin to the card. */}
       <motion.span
@@ -172,8 +180,8 @@ function SignalCard({ signal }: { signal: ExampleSignal }) {
           ))}
         </p>
 
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
-          <span className="truncate">{signal.segment}</span>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 border-t border-slate-100 pt-3 text-xs text-slate-500">
+          <span>{signal.segment}</span>
           <span className="shrink-0 font-medium text-slate-700">
             {signal.city}, {signal.countryCode}
           </span>

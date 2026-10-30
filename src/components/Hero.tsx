@@ -106,14 +106,18 @@ function SignalTicker() {
         Example signals
       </div>
       <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]">
-        <div className="flex w-max max-w-none animate-[marquee_70s_linear_infinite] gap-8 py-3.5 pl-6 hover:[animation-play-state:paused]">
+        <div
+          tabIndex={0}
+          aria-label="Example signals, scrolling. Focus to pause."
+          className="flex w-max max-w-none animate-[marquee_70s_linear_infinite] gap-8 py-3.5 pl-6 outline-none hover:[animation-play-state:paused] focus:[animation-play-state:paused] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400"
+        >
           {items.map((s, i) => (
             <div key={i} className="flex items-center gap-2.5 whitespace-nowrap text-[13px]" aria-hidden={i >= exampleSignals.length}>
               <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
                 {signalKindLabel[s.kind]}
               </span>
               <span className="text-slate-700">{s.segment}</span>
-              <span className="text-slate-400">
+              <span className="text-slate-500">
                 {s.city}, {s.countryCode}
               </span>
               <span className="ml-6 h-1 w-1 rounded-full bg-slate-300" />
