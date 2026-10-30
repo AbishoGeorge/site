@@ -1,6 +1,6 @@
 import { geoEquirectangular, geoGraticule10, geoInterpolate, geoOrthographic, geoPath } from 'd3-geo';
 import type { GeoPath, GeoPermissibleObjects, GeoProjection } from 'd3-geo';
-import { feature, mesh } from 'topojson-client';
+import { feature, merge, mesh } from 'topojson-client';
 import type { GeometryCollection, Topology } from 'topojson-specification';
 import type { Feature, Geometry, MultiLineString } from 'geojson';
 import { ambientTags, hubCities, type ExampleSignal } from './signals';
@@ -34,6 +34,9 @@ const TAG_LIFE = 2.6;
 const PULL_BACK = 0.32;
 const DIVE_IN = 0.36;
 const DOT_STEPS = [1.0, 0.6];
+/** How far the atmosphere reaches, in globe radii. */
+const BASE_EXTENT = 1.28;
+const SPRITE_PX = 1024;
 
 const DEG = Math.PI / 180;
 const TAU = Math.PI * 2;
@@ -124,9 +127,54 @@ export class GlobeEngine {
   private warmCount = 0;
 
   private countries: Feature<Geometry, { name: string }>[] = [];
+  private land: Geometry | null = null;
+  // The sphere's gradients never change shape, only size, so they are painted once and scaled.
+  private baseSprite = GlobeEngine.paintSprite(BASE_EXTENT, (c) => {
+    const halo = c.createRadialGradient(0, 0, 0.97, 0, 0, BASE_EXTENT);
+    halo.addColorStop(0, `rgba(${INK_SOFT}, 0.55)`);
+    halo.addColorStop(0.25, `rgba(${INK_SOFT}, 0.22)`);
+    halo.addColorStop(0.6, `rgba(${VIOLET}, 0.08)`);
+    halo.addColorStop(1, `rgba(${VIOLET}, 0)`);
+    c.fillStyle = halo;
+    c.beginPath();
+    c.arc(0, 0, BASE_EXTENT, 0, TAU);
+    c.fill();
+    const ocean = c.createRadialGradient(-0.35, -0.4, 0.05, 0, 0, 1.02);
+    ocean.addColorStop(0, '#f2f6ff');
+    ocean.addColorStop(0.45, '#d6e2ff');
+    ocean.addColorStop(0.8, '#adc2f7');
+    ocean.addColorStop(1, '#8ea7ec');
+    c.fillStyle = ocean;
+    c.beginPath();
+    c.arc(0, 0, 1, 0, TAU);
+    c.fill();
+  });
+  private shadeSprite = GlobeEngine.paintSprite(1, (c) => {
+    // Terminator-style shading toward the lower right gives the sphere its depth.
+    const shade = c.createRadialGradient(-0.3, -0.35, 0.1, -0.3, -0.35, 1.55);
+    shade.addColorStop(0, 'rgba(30, 27, 90, 0)');
+    shade.addColorStop(0.5, 'rgba(30, 27, 90, 0)');
+    shade.addColorStop(1, 'rgba(30, 27, 90, 0.42)');
+    c.fillStyle = shade;
+    c.beginPath();
+    c.arc(0, 0, 1, 0, TAU);
+    c.fill();
+    // Thin bright rim where the atmosphere catches the light.
+    const rim = c.createRadialGradient(0, 0, 0.92, 0, 0, 1);
+    rim.addColorStop(0, 'rgba(224, 231, 255, 0)');
+    rim.addColorStop(1, 'rgba(224, 231, 255, 0.6)');
+    c.fillStyle = rim;
+    c.fill();
+    // Specular highlight.
+    const sheen = c.createRadialGradient(-0.42, -0.48, 0, -0.42, -0.48, 0.75);
+    sheen.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+    sheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    c.fillStyle = sheen;
+    c.fill();
+  });
   private borders: MultiLineString | null = null;
   private graticule = geoGraticule10();
-  private projection: GeoProjection = geoOrthographic().clipAngle(90).precision(0.6);
+  private projection: GeoProjection = geoOrthographic().clipAngle(90).precision(1.2);
   private path: GeoPath<unknown, GeoPermissibleObjects>;
   private countryIndexByName = new Map<string, number>();
   private hubs = hubCities.map(([lat, lng]) => toVec(lat, lng));
@@ -152,6 +200,18 @@ export class GlobeEngine {
   private resizeObserver: ResizeObserver;
   private wideQuery: MediaQueryList;
   private dprQuery: MediaQueryList | null = null;
+
+  /** Paint into a square canvas whose coordinates run from -extent to +extent globe radii. */
+  private static paintSprite(extent: number, paint: (c: CanvasRenderingContext2D) => void) {
+    const canvas = document.createElement('canvas');
+    canvas.width = SPRITE_PX;
+    canvas.height = SPRITE_PX;
+    const c = canvas.getContext('2d')!;
+    c.translate(SPRITE_PX / 2, SPRITE_PX / 2);
+    c.scale(SPRITE_PX / (2 * extent), SPRITE_PX / (2 * extent));
+    paint(c);
+    return canvas;
+  }
 
   constructor(opts: GlobeEngineOptions) {
     this.opts = opts;
@@ -189,6 +249,11 @@ export class GlobeEngine {
     this.countries = all.filter((f) => f.properties.name !== 'Antarctica');
     this.countries.forEach((f, i) => this.countryIndexByName.set(f.properties.name, i));
     this.borders = mesh(world, world.objects.countries, (a, b) => a !== b);
+    // One merged landmass is far cheaper to project and clip every frame than ~170 country outlines.
+    const landShapes = world.objects.countries.geometries.filter(
+      (g) => (g.properties as { name?: string } | undefined)?.name !== 'Antarctica'
+    );
+    this.land = merge(world, landShapes as unknown as Parameters<typeof merge>[1]);
     this.buildDots();
     this.ready = true;
     this.setPhase('intro');
@@ -492,49 +557,45 @@ export class GlobeEngine {
     if (k < 0.98) {
       ctx.save();
       ctx.globalAlpha = 1 - k;
-      ctx.translate(tx, ty + R * 1.1);
-      ctx.scale(1, 0.12);
-      const sh = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 0.8);
-      sh.addColorStop(0, 'rgba(49, 46, 129, 0.22)');
-      sh.addColorStop(1, 'rgba(49, 46, 129, 0)');
+      ctx.translate(tx, ty + R * 1.12);
+      ctx.scale(1, 0.13);
+      const sh = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 0.85);
+      sh.addColorStop(0, 'rgba(30, 27, 75, 0.38)');
+      sh.addColorStop(1, 'rgba(30, 27, 75, 0)');
       ctx.fillStyle = sh;
       ctx.beginPath();
-      ctx.arc(0, 0, R * 0.8, 0, TAU);
+      ctx.arc(0, 0, R * 0.85, 0, TAU);
       ctx.fill();
       ctx.restore();
     }
 
-    // Atmosphere.
-    const halo = ctx.createRadialGradient(tx, ty, R * 0.96, tx, ty, R * 1.22);
-    halo.addColorStop(0, `rgba(${INK_SOFT}, 0.28)`);
-    halo.addColorStop(0.4, `rgba(${VIOLET}, 0.1)`);
-    halo.addColorStop(1, `rgba(${VIOLET}, 0)`);
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(tx, ty, R * 1.22, 0, TAU);
-    ctx.fill();
-
-    // Pearl sphere, lit from the upper left.
-    const sphere = ctx.createRadialGradient(tx - R * 0.38, ty - R * 0.42, R * 0.05, tx, ty, R * 1.02);
-    sphere.addColorStop(0, '#ffffff');
-    sphere.addColorStop(0.55, '#f3f4ff');
-    sphere.addColorStop(1, '#d9ddff');
-    ctx.fillStyle = sphere;
-    ctx.beginPath();
-    ctx.arc(tx, ty, R, 0, TAU);
-    ctx.fill();
+    // Atmosphere and lit ocean.
+    const be = R * BASE_EXTENT;
+    ctx.drawImage(this.baseSprite, tx - be, ty - be, be * 2, be * 2);
 
     this.projection.rotate([-this.cLng, -this.cLat]).translate([tx, ty]).scale(R);
 
     ctx.lineWidth = 0.6;
-    ctx.strokeStyle = `rgba(${INK}, 0.06)`;
+    ctx.strokeStyle = `rgba(${INK}, 0.1)`;
     ctx.beginPath();
     this.path(this.graticule);
     ctx.stroke();
 
+    // Landmasses as solid shapes, with the dot grid laid over them.
+    if (this.land) {
+      // Project the coastlines once and reuse them for the fill and the outline.
+      const coast = new Path2D();
+      this.path.context(coast as unknown as CanvasRenderingContext2D)(this.land);
+      this.path.context(ctx);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+      ctx.fill(coast);
+      ctx.lineWidth = 0.9;
+      ctx.strokeStyle = `rgba(${INK}, 0.28)`;
+      ctx.stroke(coast);
+    }
     if (this.borders) {
       ctx.lineWidth = 0.7;
-      ctx.strokeStyle = `rgba(${INK}, ${0.05 + 0.16 * zoomed})`;
+      ctx.strokeStyle = `rgba(${INK}, ${0.14 + 0.22 * zoomed})`;
       ctx.beginPath();
       this.path(this.borders);
       ctx.stroke();
@@ -554,32 +615,27 @@ export class GlobeEngine {
       ctx.clip();
       ctx.beginPath();
       this.path(hlFeature);
-      ctx.fillStyle = `rgba(${WARM}, ${0.1 * this.hl})`;
+      ctx.fillStyle = `rgba(${WARM_SOFT}, ${0.3 * this.hl})`;
       ctx.fill();
       ctx.lineJoin = 'round';
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = `rgba(${WARM}, ${0.1 * this.hl})`;
+      ctx.lineWidth = 9;
+      ctx.strokeStyle = `rgba(${WARM}, ${0.16 * this.hl})`;
       ctx.stroke();
-      ctx.lineWidth = 1.3;
-      ctx.strokeStyle = `rgba(${WARM}, ${0.75 * this.hl})`;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(${WARM}, ${0.95 * this.hl})`;
       ctx.stroke();
       ctx.restore();
     }
 
     this.drawDots(revealDeg);
+
+    // Depth shading, rim light and specular highlight.
+    ctx.drawImage(this.shadeSprite, tx - R, ty - R, R * 2, R * 2);
+
     this.drawHubs(zoomed);
     this.drawArcs(zoomed);
     this.drawVisited();
     if (pinVisible) this.drawPin(pinX, pinY);
-
-    // Soft specular sheen.
-    const sheen = ctx.createRadialGradient(tx - R * 0.45, ty - R * 0.5, 0, tx - R * 0.45, ty - R * 0.5, R * 0.8);
-    sheen.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-    sheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = sheen;
-    ctx.beginPath();
-    ctx.arc(tx, ty, R, 0, TAU);
-    ctx.fill();
 
     this.updateOverlays(pinVisible, pinX, pinY);
   }
@@ -652,7 +708,7 @@ export class GlobeEngine {
       count[slot]++;
     }
 
-    const alphas = [0.14, 0.24, 0.38, 0.55, 0.72];
+    const alphas = [0.22, 0.36, 0.52, 0.68, 0.85];
     for (let b = 0; b < 10; b++) {
       if (!count[b]) continue;
       const level = b < 5 ? 0 : 1;
@@ -690,17 +746,17 @@ export class GlobeEngine {
   private drawHubs(zoomed: number) {
     const { ctx } = this;
     const p = [0, 0, 0];
-    const a = 0.55 * (1 - zoomed * 0.5);
+    const a = 0.85 * (1 - zoomed * 0.4);
     for (const v of this.hubs) {
       if (!this.project(v[0], v[1], v[2], p) || p[2] <= 0.05) continue;
       const da = a * Math.min(1, p[2] * 2);
-      ctx.fillStyle = `rgba(${INK_SOFT}, ${da * 0.25})`;
+      ctx.fillStyle = `rgba(${INK_SOFT}, ${da * 0.3})`;
       ctx.beginPath();
-      ctx.arc(p[0], p[1], 4.5, 0, TAU);
+      ctx.arc(p[0], p[1], 6, 0, TAU);
       ctx.fill();
       ctx.fillStyle = `rgba(${INK}, ${da})`;
       ctx.beginPath();
-      ctx.arc(p[0], p[1], 1.6, 0, TAU);
+      ctx.arc(p[0], p[1], 2.2, 0, TAU);
       ctx.fill();
     }
     // Pulse on cities currently showing a tag.
@@ -755,11 +811,15 @@ export class GlobeEngine {
         const ok = at(u, p);
         if (ok && prevOk) {
           const rel = i / steps;
-          ctx.strokeStyle = `rgba(${rel > 0.5 ? VIOLET : INK_SOFT}, ${0.55 * rel * fade})`;
-          ctx.lineWidth = 0.8 + 1.2 * rel;
+          const col = rel > 0.5 ? VIOLET : INK_SOFT;
           ctx.beginPath();
           ctx.moveTo(q[0], q[1]);
           ctx.lineTo(p[0], p[1]);
+          ctx.strokeStyle = `rgba(${col}, ${0.18 * rel * fade})`;
+          ctx.lineWidth = 6 * rel + 1;
+          ctx.stroke();
+          ctx.strokeStyle = `rgba(${col}, ${0.9 * rel * fade})`;
+          ctx.lineWidth = 1.2 + 1.6 * rel;
           ctx.stroke();
         }
         q[0] = p[0];
@@ -767,9 +827,14 @@ export class GlobeEngine {
         prevOk = ok;
       }
       if (age < 1.5 && at(head, p)) {
-        ctx.fillStyle = `rgba(${VIOLET}, ${0.9 * fade * (1 - smoothstep((age - 1.2) / 0.3))})`;
+        const ha = fade * (1 - smoothstep((age - 1.2) / 0.3));
+        const hg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 9);
+        hg.addColorStop(0, `rgba(255, 255, 255, ${ha})`);
+        hg.addColorStop(0.35, `rgba(${VIOLET}, ${0.8 * ha})`);
+        hg.addColorStop(1, `rgba(${VIOLET}, 0)`);
+        ctx.fillStyle = hg;
         ctx.beginPath();
-        ctx.arc(p[0], p[1], 2.2, 0, TAU);
+        ctx.arc(p[0], p[1], 9, 0, TAU);
         ctx.fill();
       }
     }
@@ -808,20 +873,37 @@ export class GlobeEngine {
     if (!this.opts.reducedMotion) {
       for (let i = 0; i < 2; i++) {
         const t = ((age + i * 1.1) % 2.2) / 2.2;
-        ctx.strokeStyle = `rgba(${WARM}, ${0.45 * (1 - t) * a})`;
+        ctx.strokeStyle = `rgba(${WARM}, ${0.7 * (1 - t) * a})`;
         ctx.lineWidth = 1.4;
         ctx.beginPath();
-        ctx.arc(x, y, 6 + easeOutCubic(t) * 40, 0, TAU);
+        ctx.arc(x, y, 8 + easeOutCubic(t) * 52, 0, TAU);
         ctx.stroke();
       }
     }
 
-    const glow = ctx.createRadialGradient(x, y, 0, x, y, 22);
-    glow.addColorStop(0, `rgba(${WARM_SOFT}, ${0.45 * a})`);
+    // Light beam rising from the location.
+    const beamH = 70 * easeOutCubic(clamp01(age / 0.7));
+    const beam = ctx.createLinearGradient(x, y, x, y - beamH);
+    beam.addColorStop(0, `rgba(${WARM}, ${0.75 * a})`);
+    beam.addColorStop(1, `rgba(${WARM_SOFT}, 0)`);
+    ctx.strokeStyle = beam;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 10;
+    ctx.globalAlpha = 0.25;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y - beamH);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
+    glow.addColorStop(0, `rgba(${WARM_SOFT}, ${0.6 * a})`);
     glow.addColorStop(1, `rgba(${WARM_SOFT}, 0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(x, y, 22, 0, TAU);
+    ctx.arc(x, y, 30, 0, TAU);
     ctx.fill();
 
     // Marker head drops in with a small bounce.
@@ -833,12 +915,12 @@ export class GlobeEngine {
     ctx.shadowOffsetY = 2;
     ctx.fillStyle = `rgb(${WARM})`;
     ctx.beginPath();
-    ctx.arc(x, hy, 7, 0, TAU);
+    ctx.arc(x, hy, 9, 0, TAU);
     ctx.fill();
     ctx.restore();
     ctx.fillStyle = `rgba(255, 255, 255, ${a})`;
     ctx.beginPath();
-    ctx.arc(x, hy, 2.8, 0, TAU);
+    ctx.arc(x, hy, 3.5, 0, TAU);
     ctx.fill();
   }
 

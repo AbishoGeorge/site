@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  BadgeCheck,
   Briefcase,
   Building2,
   Cpu,
   FileClock,
   Landmark,
+  Mail,
   Mic,
+  Phone,
   UserPlus,
   type LucideIcon,
 } from 'lucide-react';
@@ -24,6 +27,14 @@ const kindIcon: Record<SignalKind, LucideIcon> = {
 };
 
 const TAG_SLOTS = 3;
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
 function statusText(phase: GlobePhase, s: ExampleSignal | undefined) {
   if (!s || phase === 'intro') return 'Scanning for signals';
@@ -140,7 +151,7 @@ function SignalCard({ signal }: { signal: ExampleSignal }) {
   const words = signal.headline.split(' ');
 
   return (
-    <div className="absolute left-0 top-0 w-[min(300px,calc(100vw-64px))] -translate-x-1/2 pt-9 xl:-translate-y-1/2 xl:translate-x-0 xl:pl-10 xl:pt-0"
+    <div className="absolute left-0 top-0 w-[min(320px,calc(100vw-56px))] -translate-x-1/2 pt-9 xl:-translate-y-1/2 xl:translate-x-0 xl:pl-10 xl:pt-0"
     >
       {/* Leader line from the pin to the card. */}
       <motion.span
@@ -162,7 +173,7 @@ function SignalCard({ signal }: { signal: ExampleSignal }) {
             <Icon className="h-4 w-4" />
           </span>
           <span className="text-xs font-semibold text-orange-600">{signalKindLabel[signal.kind]}</span>
-          <span className="ml-auto text-[11px] text-slate-400">{signal.age}</span>
+          <span className="ml-auto text-[11px] text-slate-500">{signal.age}</span>
         </div>
 
         <p className="mt-3 text-[15px] font-semibold leading-snug text-slate-900">
@@ -186,7 +197,39 @@ function SignalCard({ signal }: { signal: ExampleSignal }) {
             {signal.city}, {signal.countryCode}
           </span>
         </div>
-        <div className="mt-1.5 text-[11px] text-slate-400">Source: {signal.source}</div>
+        <div className="mt-1 text-[11px] text-slate-500">Source: {signal.source}</div>
+
+        {/* Who to reach out to, shown masked as a preview. */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-3 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 p-3 ring-1 ring-indigo-100"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-[11px] font-bold text-white">
+              {initials(signal.contact.name)}
+            </span>
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="text-[13px] font-semibold text-slate-900">{signal.contact.name}</div>
+              <div className="text-[11px] leading-snug text-slate-500">{signal.contact.title}</div>
+            </div>
+            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
+              <BadgeCheck className="h-3 w-3" />
+              Verified
+            </span>
+          </div>
+          <div className="mt-2.5 grid gap-1 text-[12px] text-slate-700">
+            <span className="flex items-center gap-2">
+              <Mail className="h-3.5 w-3.5 text-indigo-500" />
+              <span className="font-mono tracking-tight">{signal.contact.email}</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <Phone className="h-3.5 w-3.5 text-indigo-500" />
+              <span className="font-mono tracking-tight">{signal.contact.phone}</span>
+            </span>
+          </div>
+        </motion.div>
       </motion.div>
     </div>
   );

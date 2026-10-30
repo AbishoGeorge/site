@@ -18,6 +18,8 @@ export interface ExampleSignal {
   zoom: number;
   source: string;
   age: string;
+  /** The person to reach out to. Email and phone are shown masked, as a preview. */
+  contact: { name: string; title: string; email: string; phone: string };
 }
 
 export const exampleSignals: ExampleSignal[] = [
@@ -34,6 +36,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 2.6,
     source: 'Press release',
     age: '2 days ago',
+    contact: { name: 'Priya S.', title: 'Head of Finance Operations', email: 'pr•••@•••••••.com', phone: '+44 7••• ••• 482' },
   },
   {
     id: 'bengaluru',
@@ -48,6 +51,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 2.1,
     source: 'Local news',
     age: '3 days ago',
+    contact: { name: 'Arjun M.', title: 'VP, Delivery', email: 'ar•••@••••••.in', phone: '+91 98••• ••• 317' },
   },
   {
     id: 'tokyo',
@@ -62,6 +66,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 2.4,
     source: 'Earnings call',
     age: '3 weeks ago',
+    contact: { name: 'Kenji T.', title: 'Director of IT', email: 'ke•••@••••••.jp', phone: '+81 90-••••-•264' },
   },
   {
     id: 'sydney',
@@ -76,6 +81,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 1.9,
     source: 'Government notice',
     age: '1 week ago',
+    contact: { name: 'Emma L.', title: 'Chief Digital Officer', email: 'em•••@••••••.au', phone: '+61 4•• ••• 905' },
   },
   {
     id: 'dubai',
@@ -90,6 +96,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 2.8,
     source: 'Press release',
     age: '6 days ago',
+    contact: { name: 'Omar H.', title: 'VP Operations', email: 'om•••@•••••••.ae', phone: '+971 50 ••• •• 71' },
   },
   {
     id: 'munich',
@@ -104,6 +111,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 2.7,
     source: 'Company news',
     age: '1 week ago',
+    contact: { name: 'Lena K.', title: 'Chief Information Officer', email: 'le•••@••••••.de', phone: '+49 151 •••• •338' },
   },
   {
     id: 'sao-paulo',
@@ -118,6 +126,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 1.9,
     source: 'Job posting',
     age: '4 days ago',
+    contact: { name: 'Rafael C.', title: 'Head of Supply Chain Tech', email: 'ra•••@••••••.br', phone: '+55 11 9••••-•412' },
   },
   {
     id: 'toronto',
@@ -132,6 +141,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 2.1,
     source: 'Public filing',
     age: '2 weeks ago',
+    contact: { name: 'Daniel R.', title: 'Director, CRM & Sales Ops', email: 'da•••@•••••••.ca', phone: '+1 416 •••-•729' },
   },
   {
     id: 'austin',
@@ -146,6 +156,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 1.8,
     source: 'Job boards',
     age: '5 days ago',
+    contact: { name: 'Megan W.', title: 'VP of Sales', email: 'me•••@••••••.com', phone: '+1 512 •••-•186' },
   },
 ];
 

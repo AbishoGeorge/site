@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { brand, demoHref, demoLinkProps } from '../brand';
 import Logo from './Logo';
 
 const links = [
   { href: '#why', label: 'Why us' },
+  { href: '#what-you-get', label: 'What you get' },
   { href: '#how-it-works', label: 'How it works' },
   { href: '#signals', label: 'Signals' },
   { href: '#faq', label: 'FAQ' },
@@ -23,22 +24,24 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled || open ? 'border-b border-gray-100 bg-white/90 backdrop-blur-lg' : 'bg-white'
-      }`}
-    >
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4">
+      <nav
+        className={`mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full pl-4 pr-2 ring-1 transition-all duration-300 sm:pl-5 ${
+          scrolled || open
+            ? 'bg-white/80 shadow-lg shadow-indigo-900/5 ring-indigo-100 backdrop-blur-xl'
+            : 'bg-white/60 ring-white/80 backdrop-blur-md'
+        }`}
+      >
         <a href="#top" className="text-slate-900" aria-label={`${brand.name} home`}>
           <Logo />
         </a>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-0.5 lg:flex">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-slate-900"
+              className="rounded-full px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-indigo-50 hover:text-slate-900"
             >
               {l.label}
             </a>
@@ -48,15 +51,18 @@ export default function Navbar() {
         <a
           href={demoHref}
           {...demoLinkProps}
-          className="hidden rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 md:inline-flex"
+          className="group hidden items-center gap-2 rounded-full bg-slate-900 py-2 pl-4 pr-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 lg:inline-flex"
         >
           Book a demo
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 transition-transform duration-300 group-hover:rotate-45">
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </span>
         </a>
 
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="rounded-lg p-2 hover:bg-gray-50 md:hidden"
+          className="rounded-full p-2.5 hover:bg-indigo-50 lg:hidden"
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
         >
@@ -67,31 +73,30 @@ export default function Navbar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-gray-100 bg-white md:hidden"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="mx-auto mt-2 max-w-6xl rounded-3xl bg-white/95 p-3 shadow-xl shadow-indigo-900/10 ring-1 ring-indigo-100 backdrop-blur-xl lg:hidden"
           >
-            <div className="space-y-1 px-4 py-3">
-              {links.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-slate-900"
-                >
-                  {l.label}
-                </a>
-              ))}
+            {links.map((l) => (
               <a
-                href={demoHref}
-                {...demoLinkProps}
+                key={l.href}
+                href={l.href}
                 onClick={() => setOpen(false)}
-                className="mt-2 block rounded-full bg-slate-900 px-4 py-2.5 text-center text-sm font-semibold text-white"
+                className="block rounded-2xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-indigo-50"
               >
-                Book a demo
+                {l.label}
               </a>
-            </div>
+            ))}
+            <a
+              href={demoHref}
+              {...demoLinkProps}
+              onClick={() => setOpen(false)}
+              className="mt-2 block rounded-full bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white"
+            >
+              Book a demo
+            </a>
           </motion.div>
         )}
       </AnimatePresence>

@@ -6,6 +6,15 @@ html {
   scroll-behavior: smooth;
 }
 
+@layer base {
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+    text-wrap: balance;
+  }
+}
+
 body {
   background: #ffffff;
   color: #0f172a;

@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Clock3, FileSearch, PenLine } from 'lucide-react';
 import SignalGlobe from './globe/SignalGlobe';
-import { exampleSignals, signalKindLabel } from './globe/signals';
 import { brand, demoHref, demoLinkProps } from '../brand';
 
 const proofPoints = [
@@ -18,7 +17,7 @@ const fadeUp = (delay: number) => ({
 
 export default function Hero() {
   return (
-    <section id="top" className="scroll-mt-16 px-2 pt-2 sm:px-4 sm:pt-4">
+    <section id="top" className="scroll-mt-20 px-2 pt-2 sm:px-4 sm:pt-4">
       <div className="relative mx-auto flex max-w-[1600px] flex-col overflow-hidden rounded-[28px] bg-[#f5f6ff] ring-1 ring-indigo-100 xl:block xl:h-[clamp(700px,calc(100svh-96px),860px)]">
         {/* Ambient light */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_60%_at_72%_48%,rgba(165,180,252,0.55),transparent_70%)]" />
@@ -27,7 +26,7 @@ export default function Hero() {
         <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(rgba(99,102,241,0.18)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_25%_40%,black,transparent_65%)]" />
 
         {/* Globe stage: full-bleed behind the copy on wide screens, its own block below the copy otherwise. */}
-        <div className="relative order-2 h-[620px] sm:h-[680px] xl:absolute xl:inset-0 xl:h-auto">
+        <div className="relative order-2 h-[680px] sm:h-[720px] xl:absolute xl:inset-0 xl:h-auto">
           <SignalGlobe />
         </div>
         <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52%] bg-[linear-gradient(to_right,#f5f6ff_0%,rgba(245,246,255,0.9)_45%,transparent_100%)] xl:block" />
@@ -91,40 +90,7 @@ export default function Hero() {
           </motion.ul>
         </div>
 
-        <SignalTicker />
       </div>
     </section>
-  );
-}
-
-function SignalTicker() {
-  const items = [...exampleSignals, ...exampleSignals];
-  return (
-    <div className="relative z-10 order-3 flex items-center border-t border-indigo-100 bg-white/70 backdrop-blur xl:absolute xl:inset-x-0 xl:bottom-0">
-      <div className="hidden shrink-0 items-center gap-2 border-r border-indigo-100 px-5 py-3.5 text-xs font-semibold text-slate-500 sm:flex">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
-        Example signals
-      </div>
-      <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]">
-        <div
-          tabIndex={0}
-          aria-label="Example signals, scrolling. Focus to pause."
-          className="flex w-max max-w-none animate-[marquee_70s_linear_infinite] gap-8 py-3.5 pl-6 outline-none hover:[animation-play-state:paused] focus:[animation-play-state:paused] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400"
-        >
-          {items.map((s, i) => (
-            <div key={i} className="flex items-center gap-2.5 whitespace-nowrap text-[13px]" aria-hidden={i >= exampleSignals.length}>
-              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
-                {signalKindLabel[s.kind]}
-              </span>
-              <span className="text-slate-700">{s.segment}</span>
-              <span className="text-slate-500">
-                {s.city}, {s.countryCode}
-              </span>
-              <span className="ml-6 h-1 w-1 rounded-full bg-slate-300" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
