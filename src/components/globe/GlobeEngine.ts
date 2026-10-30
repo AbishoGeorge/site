@@ -28,6 +28,8 @@ const INTRO_TIME = 1.0;
 const ARRIVE_TIME = 0.75;
 const SHOW_TIME = 4.4;
 const LEAVE_TIME = 0.35;
+/** Never zoom in further than this, whatever a signal asks for: the globe should stay a globe. */
+const MAX_ZOOM = 1.9;
 const TAG_LIFE = 2.6;
 
 // A flight pulls back to the whole globe, turns it, then dives in. Fractions of the flight time.
@@ -222,6 +224,8 @@ export class GlobeEngine {
   private tagLabel = 0;
   /** Fades every tag in with 'show' and out with the card, so none ride along on a flight. */
   private tagVis = 0;
+  /** A scanning sweep runs around the rim while the camera travels. */
+  private sweepVis = 0;
 
   private raf = 0;
   private last = 0;
@@ -427,7 +431,7 @@ export class GlobeEngine {
     this.fly = {
       along: geoInterpolate([this.gLng, this.gLat], [s.lng, s.lat]),
       s0: this.gScale,
-      s1: s.zoom,
+      s1: Math.min(MAX_ZOOM, s.zoom),
       dur: this.opts.reducedMotion ? 1.2 : 3.0 + 0.8 * clamp01(dist / 120),
     };
     // `target` stays on the city just shown so its pin and highlight fade out in place; it moves on arrival.
@@ -479,7 +483,6 @@ export class GlobeEngine {
         if (this.phaseT > ARRIVE_TIME) this.setPhase('show');
         break;
       case 'show':
-        this.gScale *= 1 + 0.012 * dt;
         if (this.phaseT > SHOW_TIME) {
           if (!this.visited.includes(this.index)) this.visited.push(this.index);
           this.setPhase('leave');
@@ -509,6 +512,8 @@ export class GlobeEngine {
       }
       this.arcs = this.arcs.filter((a) => this.time - a.born < 2.6);
     }
+
+    this.sweepVis = clamp01(this.sweepVis + (this.phase === 'fly' ? dt / 0.5 : -dt / 0.6));
 
     // While a signal is open, a few other cities flash short tags.
     this.tagVis = clamp01(this.tagVis + (this.phase === 'show' ? dt / 0.3 : -dt / 0.3));
@@ -587,7 +592,8 @@ export class GlobeEngine {
     ctx.clearRect(0, 0, W, H);
     if (!this.ready) return;
 
-    const k = smoothstep((this.scale - 1) / 0.8);
+    // The globe slides to its focus spot over the first part of the zoom, so it is in place at every stop.
+    const k = smoothstep((this.scale - 1) / 0.5);
     this.R = this.R0 * this.scale;
     this.tx = lerp(this.baseX, this.focusX, k);
     this.ty = lerp(this.baseY, this.focusY, k);
@@ -632,11 +638,8 @@ export class GlobeEngine {
       const coast = new Path2D();
       this.path.context(coast as unknown as CanvasRenderingContext2D)(this.land);
       this.path.context(ctx);
-      // Soft glow along the coasts, then the land itself.
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = `rgba(${INK_SOFT}, 0.14)`;
-      ctx.stroke(coast);
+      // A wide glow stroke along the coasts cost about a sixth of the frame rate, so the land gets a fill and a
+      // fine outline only.
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       ctx.fill(coast);
       ctx.lineWidth = 0.9;
@@ -683,6 +686,7 @@ export class GlobeEngine {
     ctx.drawImage(this.shadeSprite, tx - R, ty - R, R * 2, R * 2);
 
     if (ringVis > 0.01) this.drawOrbits(true, ringVis);
+    if (this.sweepVis > 0 && !this.opts.reducedMotion) this.drawSweep();
     this.drawHubs(zoomed);
     this.drawArcs(zoomed);
     this.drawVisited();
@@ -745,6 +749,36 @@ export class GlobeEngine {
     }
   }
 
+  /** A bright arc chasing around the atmosphere, fading along its tail. */
+  private drawSweep() {
+    const { ctx, R, tx, ty } = this;
+    const head = this.time * 2.4;
+    const span = 1.9;
+    const steps = 28;
+    const r = R * 1.025;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < steps; i++) {
+      const a0 = head - span + (span * i) / steps;
+      const a1 = a0 + span / steps + 0.01;
+      const f = (i + 1) / steps;
+      ctx.strokeStyle = `rgba(${INK_SOFT}, ${0.55 * f * f * this.sweepVis})`;
+      ctx.lineWidth = 1 + 2.5 * f;
+      ctx.beginPath();
+      ctx.arc(tx, ty, r, a0, a1);
+      ctx.stroke();
+    }
+    const hx = tx + r * Math.cos(head);
+    const hy = ty + r * Math.sin(head);
+    const g = ctx.createRadialGradient(hx, hy, 0, hx, hy, 12);
+    g.addColorStop(0, `rgba(255, 255, 255, ${0.95 * this.sweepVis})`);
+    g.addColorStop(0.35, `rgba(${VIOLET}, ${0.6 * this.sweepVis})`);
+    g.addColorStop(1, `rgba(${VIOLET}, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 12, 0, TAU);
+    ctx.fill();
+  }
+
   private drawDots(revealDeg: number) {
     const { ctx, W, H, R, tx, ty } = this;
     const lr = -this.cLng * DEG;
@@ -757,7 +791,7 @@ export class GlobeEngine {
     count.fill(0);
     this.warmCount = 0;
 
-    const fine = smoothstep((this.scale - 1.3) / 0.6);
+    const fine = smoothstep((this.scale - 1.45) / 0.6);
     const levelAlpha = [1, fine];
     // All dots shrink together as the in-between dots fade in.
     const dotSize = Math.max(1, R * lerp(COARSE_STEP, FINE_STEP, fine) * DEG * 0.34);

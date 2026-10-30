@@ -4,7 +4,7 @@ export const brand = {
   email: 'hello@yourbrand.com',
   /**
    * Calendar or booking link for every "Book a demo" button, e.g. a Calendly URL.
-   * Leave empty to send those buttons to the contact section, where the main button opens an email instead.
+   * Leave empty to use the on-site booking form instead.
    */
   demoUrl: '',
   year: 2026,
@@ -15,8 +15,8 @@ export const brand = {
   formEndpoint: '',
 };
 
-/** Where the navbar and hero "Book a demo" buttons point. */
-export const demoHref = brand.demoUrl || '#contact';
+/** Where every "Book a demo" button points: the booking link if set, otherwise the on-site booking page. */
+export const demoHref = brand.demoUrl || '#book-demo';
 
 /** External booking links open in a new tab. */
 export const demoLinkProps = /^https?:\/\//.test(brand.demoUrl) ? { target: '_blank', rel: 'noopener noreferrer' } : {};

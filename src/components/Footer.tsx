@@ -1,42 +1,44 @@
+import { ArrowUpRight } from 'lucide-react';
 import { brand, demoHref, demoLinkProps } from '../brand';
+import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 import Logo from './Logo';
 
 const columns = [
   {
     title: 'Product',
     links: [
+      { href: '#live-accounts', label: 'Live accounts' },
       { href: '#what-you-get', label: 'What you get' },
-      { href: '#how-it-works', label: 'How it works' },
-      { href: '#signals', label: 'Signal library' },
+      { href: `#${TOP_ACCOUNTS_HASH}`, label: 'See my top accounts' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { href: '#top-accounts', label: 'See my top accounts' },
       { href: '#faq', label: 'FAQ' },
       { href: '#contact', label: 'Contact' },
+      { href: demoHref, label: 'Book a demo' },
     ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-slate-200/70 bg-gradient-to-b from-white to-indigo-50/40">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:px-8">
-        <div className="text-slate-900">
+    <footer className="bg-slate-950 text-slate-400">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:px-8">
+        <div className="text-white">
           <Logo />
-          <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-500">
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
             Evidence-backed accounts, the people to reach and the reason to reach them now.
           </p>
         </div>
         {columns.map((c) => (
           <div key={c.title}>
-            <h3 className="text-sm font-semibold text-slate-900">{c.title}</h3>
-            <ul className="mt-3 space-y-2 text-sm text-slate-500">
+            <h3 className="text-sm font-semibold text-white">{c.title}</h3>
+            <ul className="mt-4 space-y-2.5 text-sm">
               {c.links.map((l) => (
-                <li key={l.href}>
-                  <a href={l.href} className="transition-colors hover:text-slate-900">
+                <li key={l.label}>
+                  <a href={l.href} className="transition-colors hover:text-white">
                     {l.label}
                   </a>
                 </li>
@@ -45,22 +47,30 @@ export default function Footer() {
           </div>
         ))}
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">Get in touch</h3>
-          <a href={`mailto:${brand.email}`} className="mt-3 block text-sm text-slate-500 hover:text-slate-900">
+          <h3 className="text-sm font-semibold text-white">Get in touch</h3>
+          <a href={`mailto:${brand.email}`} className="mt-4 block text-sm transition-colors hover:text-white">
             {brand.email}
           </a>
           <a
             href={demoHref}
             {...demoLinkProps}
-            className="mt-4 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            className="group mt-5 inline-flex items-center gap-2 rounded-full bg-white py-2 pl-4 pr-2 text-sm font-semibold text-slate-900 transition-transform hover:-translate-y-0.5"
           >
             Book a demo
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white transition-transform duration-300 group-hover:rotate-45">
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </span>
           </a>
         </div>
       </div>
-      <div className="border-t border-slate-200/70">
-        <div className="mx-auto max-w-7xl px-4 py-5 text-xs text-slate-500 sm:px-6 lg:px-8">
-          © {brand.year} {brand.name}. All rights reserved.
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-slate-500 sm:px-6 lg:px-8">
+          <span>
+            © {brand.year} {brand.name}. All rights reserved.
+          </span>
+          <a href="#top" className="transition-colors hover:text-white">
+            Back to top ↑
+          </a>
         </div>
       </div>
     </footer>
