@@ -30,7 +30,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="scroll-mt-20 bg-gradient-to-b from-white to-electric-50/40 py-20 sm:py-28">
+    <section id="how-it-works" className="scroll-mt-20 bg-gradient-to-b from-white to-indigo-50/50 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -39,8 +39,8 @@ export default function HowItWorks() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-electric-500">How it works</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-navy-900 sm:text-5xl">From market noise to a short list you can act on.</h2>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">How it works</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">From market noise to a short list you can act on.</h2>
         </motion.div>
 
         <div className="relative mt-16">
@@ -49,7 +49,7 @@ export default function HowItWorks() {
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true, margin: '-120px' }}
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute left-[12.5%] right-[12.5%] top-7 hidden h-px origin-left bg-gradient-to-r from-electric-200 via-electric-500 to-amber-400 lg:block"
+            className="absolute left-[12.5%] right-[12.5%] top-7 hidden h-px origin-left bg-gradient-to-r from-indigo-200 via-indigo-500 to-orange-400 lg:block"
           />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map(({ icon: Icon, title, desc, chips }, i) => (
@@ -61,18 +61,18 @@ export default function HowItWorks() {
                 transition={{ duration: 0.5, delay: 0.15 + i * 0.12 }}
                 className="relative flex flex-col items-center text-center"
               >
-                <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-navy-900 text-white shadow-lg shadow-navy-900/20 ring-8 ring-white">
+                <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-indigo-900/20 ring-8 ring-white">
                   <Icon className="h-6 w-6" />
-                  <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-300 text-[11px] font-bold text-navy-900">
+                  <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-orange-400 text-[11px] font-bold text-white">
                     {i + 1}
                   </span>
                 </div>
                 <div className="mt-6 flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <h3 className="text-lg font-bold text-navy-900">{title}</h3>
+                  <h3 className="text-lg font-bold text-slate-900">{title}</h3>
                   <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-500">{desc}</p>
                   <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                     {chips.map((c) => (
-                      <span key={c} className="rounded-full bg-electric-50 px-2.5 py-1 text-[11px] font-medium text-electric-700">
+                      <span key={c} className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-medium text-indigo-700">
                         {c}
                       </span>
                     ))}

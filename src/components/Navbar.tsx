@@ -29,7 +29,7 @@ export default function Navbar() {
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <a href="#top" className="text-navy-900" aria-label={`${brand.name} home`}>
+        <a href="#top" className="text-slate-900" aria-label={`${brand.name} home`}>
           <Logo />
         </a>
 
@@ -38,7 +38,7 @@ export default function Navbar() {
             <a
               key={l.href}
               href={l.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-navy-900"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-slate-900"
             >
               {l.label}
             </a>
@@ -48,7 +48,7 @@ export default function Navbar() {
         <a
           href={demoHref}
           {...demoLinkProps}
-          className="hidden rounded-full bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-800 md:inline-flex"
+          className="hidden rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 md:inline-flex"
         >
           Book a demo
         </a>
@@ -78,7 +78,7 @@ export default function Navbar() {
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-navy-900"
+                  className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-slate-900"
                 >
                   {l.label}
                 </a>
@@ -87,7 +87,7 @@ export default function Navbar() {
                 href={demoHref}
                 {...demoLinkProps}
                 onClick={() => setOpen(false)}
-                className="mt-2 block rounded-full bg-navy-900 px-4 py-2.5 text-center text-sm font-semibold text-white"
+                className="mt-2 block rounded-full bg-slate-900 px-4 py-2.5 text-center text-sm font-semibold text-white"
               >
                 Book a demo
               </a>

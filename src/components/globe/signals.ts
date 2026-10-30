@@ -1,268 +1,185 @@
-// Illustrative accounts for the hero globe. Company names are fictional.
+// Representative examples for the hero globe. Each stop shows one signal, not an account's full evidence.
 
-export type SignalKind =
-  | 'hiring'
-  | 'funding'
-  | 'leadership'
-  | 'tech'
-  | 'rfp'
-  | 'expansion'
-  | 'regulatory'
-  | 'earnings';
+export type SignalKind = 'funding' | 'hiring' | 'leadership' | 'expansion' | 'tech' | 'renewal' | 'earnings';
 
-export interface Evidence {
-  kind: SignalKind;
-  text: string;
-  source: string;
-  age: string;
-}
-
-export interface AccountSignal {
+export interface ExampleSignal {
   id: string;
-  company: string;
-  initials: string;
-  industry: string;
-  size: string;
+  kind: SignalKind;
+  headline: string;
+  /** Who the signal is about, described by segment rather than a company name. */
+  segment: string;
   city: string;
-  region: string;
   countryCode: string;
   /** Country name exactly as it appears in world-atlas countries-110m. */
   country: string;
   lat: number;
   lng: number;
-  /** Globe zoom when focused on this account (1 = whole globe). */
+  /** Globe zoom when focused here (1 = whole globe). */
   zoom: number;
-  score: number;
-  evidence: Evidence[];
-  whyNow: string;
+  source: string;
+  age: string;
 }
 
-export const accountSignals: AccountSignal[] = [
-  {
-    id: 'munich',
-    company: 'Kestrel Mobility',
-    initials: 'KM',
-    industry: 'Automotive software',
-    size: '1,200 employees',
-    city: 'Munich',
-    region: 'Bavaria',
-    countryCode: 'DE',
-    country: 'Germany',
-    lat: 48.14,
-    lng: 11.58,
-    zoom: 2.6,
-    score: 94,
-    evidence: [
-      { kind: 'hiring', text: '18 data-platform roles opened in 30 days', source: 'Careers page', age: '3d ago' },
-      { kind: 'leadership', text: 'New CIO joined from a cloud-first OEM', source: 'LinkedIn', age: '6w ago' },
-      { kind: 'rfp', text: 'Tender issued for data warehouse migration', source: 'Procurement portal', age: '9d ago' },
-    ],
-    whyNow: 'Platform rebuild is funded and the vendor shortlist is still open.',
-  },
-  {
-    id: 'dubai',
-    company: 'Al Noor Hospitality',
-    initials: 'AN',
-    industry: 'Hotels & resorts',
-    size: '4,800 employees',
-    city: 'Dubai',
-    region: 'Dubai',
-    countryCode: 'AE',
-    country: 'United Arab Emirates',
-    lat: 25.2,
-    lng: 55.27,
-    zoom: 2.8,
-    score: 91,
-    evidence: [
-      { kind: 'expansion', text: '5 new properties announced for 2027', source: 'Investor update', age: '2w ago' },
-      { kind: 'rfp', text: 'RFP live for a guest-data platform', source: 'Supplier portal', age: '6d ago' },
-      { kind: 'hiring', text: 'Hiring a Director of CRM & Loyalty', source: 'Job board', age: '4d ago' },
-    ],
-    whyNow: 'New properties need a unified guest platform before opening day.',
-  },
-  {
-    id: 'bengaluru',
-    company: 'Quanta Retail Tech',
-    initials: 'QR',
-    industry: 'Retail technology',
-    size: '2,300 employees',
-    city: 'Bengaluru',
-    region: 'Karnataka',
-    countryCode: 'IN',
-    country: 'India',
-    lat: 12.97,
-    lng: 77.59,
-    zoom: 2.0,
-    score: 89,
-    evidence: [
-      { kind: 'expansion', text: 'New 400-seat engineering centre opening', source: 'Press release', age: '11d ago' },
-      { kind: 'leadership', text: 'Head of Procurement hired from a Big Four firm', source: 'LinkedIn', age: '5w ago' },
-      { kind: 'tech', text: 'Job posts mention moving off legacy ERP', source: 'Job descriptions', age: '8d ago' },
-    ],
-    whyNow: 'New site and new buyer: budgets are being set this quarter.',
-  },
-  {
-    id: 'tokyo',
-    company: 'Kitora Precision Works',
-    initials: 'KP',
-    industry: 'Industrial manufacturing',
-    size: '6,500 employees',
-    city: 'Tokyo',
-    region: 'Kanto',
-    countryCode: 'JP',
-    country: 'Japan',
-    lat: 35.68,
-    lng: 139.69,
-    zoom: 2.4,
-    score: 92,
-    evidence: [
-      { kind: 'earnings', text: '"Cloud ERP" named a FY priority on earnings call', source: 'IR transcript', age: '3w ago' },
-      { kind: 'expansion', text: 'New plant announced in Vietnam', source: 'Business press', age: '5w ago' },
-      { kind: 'hiring', text: '20-person digital transformation office formed', source: 'Careers page', age: '2w ago' },
-    ],
-    whyNow: 'Board-level mandate plus a new plant to bring online on the new stack.',
-  },
-  {
-    id: 'sydney',
-    company: 'Southerly Grid Energy',
-    initials: 'SG',
-    industry: 'Utilities & energy',
-    size: '1,900 employees',
-    city: 'Sydney',
-    region: 'New South Wales',
-    countryCode: 'AU',
-    country: 'Australia',
-    lat: -33.87,
-    lng: 151.21,
-    zoom: 1.8,
-    score: 90,
-    evidence: [
-      { kind: 'funding', text: 'Awarded A$40M grid-modernisation grant', source: 'Government notice', age: '10d ago' },
-      { kind: 'hiring', text: '12 SCADA & OT security engineers wanted', source: 'Job board', age: '6d ago' },
-      { kind: 'leadership', text: 'New COO appointed from a tier-one utility', source: 'Company news', age: '4w ago' },
-    ],
-    whyNow: 'Grant money must be committed within 12 months.',
-  },
-  {
-    id: 'sao-paulo',
-    company: 'Vale Azul Logística',
-    initials: 'VA',
-    industry: 'Logistics & 3PL',
-    size: '3,100 employees',
-    city: 'São Paulo',
-    region: 'São Paulo',
-    countryCode: 'BR',
-    country: 'Brazil',
-    lat: -23.55,
-    lng: -46.63,
-    zoom: 1.8,
-    score: 87,
-    evidence: [
-      { kind: 'funding', text: 'R$180M credit facility closed for expansion', source: 'Regulatory filing', age: '2w ago' },
-      { kind: 'expansion', text: 'Two new distribution hubs under construction', source: 'Local news', age: '3w ago' },
-      { kind: 'tech', text: 'Evaluating warehouse management systems', source: 'Job descriptions', age: '5d ago' },
-    ],
-    whyNow: 'New hubs go live in Q2. Tooling decisions happen now.',
-  },
-  {
-    id: 'austin',
-    company: 'Brightline Health Partners',
-    initials: 'BH',
-    industry: 'Healthcare network',
-    size: '7,200 employees',
-    city: 'Austin',
-    region: 'Texas',
-    countryCode: 'US',
-    country: 'United States of America',
-    lat: 30.27,
-    lng: -97.74,
-    zoom: 1.7,
-    score: 96,
-    evidence: [
-      { kind: 'funding', text: '$62M Series C closed', source: 'Press release', age: '12d ago' },
-      { kind: 'expansion', text: '3 new clinics announced across Texas', source: 'Local news', age: '3w ago' },
-      { kind: 'hiring', text: 'VP of Revenue Cycle role opened', source: 'Job board', age: '5d ago' },
-    ],
-    whyNow: 'Fresh capital and a new revenue leader who has budget to spend.',
-  },
-  {
-    id: 'toronto',
-    company: 'Maplewave Credit Union',
-    initials: 'MC',
-    industry: 'Financial services',
-    size: '2,600 employees',
-    city: 'Toronto',
-    region: 'Ontario',
-    countryCode: 'CA',
-    country: 'Canada',
-    lat: 43.65,
-    lng: -79.38,
-    zoom: 2.2,
-    score: 88,
-    evidence: [
-      { kind: 'leadership', text: 'First Chief Digital Officer appointed', source: 'Company news', age: '7w ago' },
-      { kind: 'expansion', text: 'Acquired two regional lenders', source: 'Regulatory filing', age: '4w ago' },
-      { kind: 'regulatory', text: 'Open-banking compliance deadline set for next year', source: 'Regulator notice', age: '2w ago' },
-    ],
-    whyNow: 'Merging three core systems under a new digital leader.',
-  },
+export const exampleSignals: ExampleSignal[] = [
   {
     id: 'london',
-    company: 'Halden & Rowe Insurance',
-    initials: 'HR',
-    industry: 'Insurance',
-    size: '3,400 employees',
+    kind: 'funding',
+    headline: 'Raised a $45M Series B to expand into Europe',
+    segment: 'Fintech · 420 employees',
     city: 'London',
-    region: 'England',
     countryCode: 'UK',
     country: 'United Kingdom',
     lat: 51.51,
     lng: -0.13,
     zoom: 2.6,
-    score: 93,
-    evidence: [
-      { kind: 'earnings', text: 'CFO cited "claims automation" 4× on Q3 call', source: 'IR transcript', age: '3w ago' },
-      { kind: 'tech', text: 'Policy-admin contract expires in 90 days', source: 'Public tender record', age: '1w ago' },
-      { kind: 'regulatory', text: 'Consumer Duty review flagged claims handling', source: 'Annual report', age: '6w ago' },
-    ],
-    whyNow: 'Contract renewal window opens next month.',
+    source: 'Press release',
+    age: '2 days ago',
+  },
+  {
+    id: 'bengaluru',
+    kind: 'expansion',
+    headline: 'Opening a 600-seat delivery center this quarter',
+    segment: 'IT services · 5,000 employees',
+    city: 'Bengaluru',
+    countryCode: 'IN',
+    country: 'India',
+    lat: 12.97,
+    lng: 77.59,
+    zoom: 2.1,
+    source: 'Local news',
+    age: '3 days ago',
+  },
+  {
+    id: 'tokyo',
+    kind: 'earnings',
+    headline: 'CEO named cloud migration a top priority for next year',
+    segment: 'Electronics · 3,000 employees',
+    city: 'Tokyo',
+    countryCode: 'JP',
+    country: 'Japan',
+    lat: 35.68,
+    lng: 139.69,
+    zoom: 2.4,
+    source: 'Earnings call',
+    age: '3 weeks ago',
+  },
+  {
+    id: 'sydney',
+    kind: 'funding',
+    headline: 'Awarded a A$12M grant to modernise patient records',
+    segment: 'Healthcare · 900 employees',
+    city: 'Sydney',
+    countryCode: 'AU',
+    country: 'Australia',
+    lat: -33.87,
+    lng: 151.21,
+    zoom: 1.9,
+    source: 'Government notice',
+    age: '1 week ago',
+  },
+  {
+    id: 'dubai',
+    kind: 'expansion',
+    headline: 'Announced four new hotels opening next year',
+    segment: 'Hospitality · 2,500 employees',
+    city: 'Dubai',
+    countryCode: 'AE',
+    country: 'United Arab Emirates',
+    lat: 25.2,
+    lng: 55.27,
+    zoom: 2.8,
+    source: 'Press release',
+    age: '6 days ago',
+  },
+  {
+    id: 'munich',
+    kind: 'leadership',
+    headline: 'Appointed a new CIO to lead its digital overhaul',
+    segment: 'Manufacturing · 2,000 employees',
+    city: 'Munich',
+    countryCode: 'DE',
+    country: 'Germany',
+    lat: 48.14,
+    lng: 11.58,
+    zoom: 2.7,
+    source: 'Company news',
+    age: '1 week ago',
+  },
+  {
+    id: 'sao-paulo',
+    kind: 'tech',
+    headline: 'Replacing its warehouse management system',
+    segment: 'Logistics · 1,200 employees',
+    city: 'São Paulo',
+    countryCode: 'BR',
+    country: 'Brazil',
+    lat: -23.55,
+    lng: -46.63,
+    zoom: 1.9,
+    source: 'Job posting',
+    age: '4 days ago',
+  },
+  {
+    id: 'toronto',
+    kind: 'renewal',
+    headline: 'CRM contract comes up for renewal in 90 days',
+    segment: 'Insurance · 1,500 employees',
+    city: 'Toronto',
+    countryCode: 'CA',
+    country: 'Canada',
+    lat: 43.65,
+    lng: -79.38,
+    zoom: 2.1,
+    source: 'Public filing',
+    age: '2 weeks ago',
+  },
+  {
+    id: 'austin',
+    kind: 'hiring',
+    headline: 'Hiring 14 account executives this quarter',
+    segment: 'B2B software · 300 employees',
+    city: 'Austin',
+    countryCode: 'US',
+    country: 'United States of America',
+    lat: 30.27,
+    lng: -97.74,
+    zoom: 1.8,
+    source: 'Job boards',
+    age: '5 days ago',
   },
 ];
 
 export const signalKindLabel: Record<SignalKind, string> = {
-  hiring: 'Hiring surge',
   funding: 'Funding',
+  hiring: 'Hiring surge',
   leadership: 'Leadership change',
-  tech: 'Tech change',
-  rfp: 'Open RFP',
   expansion: 'Expansion',
-  regulatory: 'Regulatory',
+  tech: 'Tech change',
+  renewal: 'Contract renewal',
   earnings: 'Earnings call',
 };
 
-/** Short tags drawn next to the evidence arcs on the globe. */
-export const signalKindTag: Record<SignalKind, string> = {
-  hiring: 'JOBS',
-  funding: 'FUNDING',
-  leadership: 'PEOPLE',
-  tech: 'TECH',
-  rfp: 'RFP',
-  expansion: 'NEWS',
-  regulatory: 'FILINGS',
-  earnings: 'EARNINGS',
-};
+/** Short tags that flicker up at other cities while the camera holds on a signal. */
+export const ambientTags = [
+  'Hiring surge',
+  'New VP Sales',
+  'Funding round',
+  'New office',
+  'Tech change',
+  'Contract renewal',
+  'Leadership hire',
+  'Grant awarded',
+  'RFP published',
+  'Acquisition',
+];
 
-export const signalTicker: { kind: SignalKind; text: string; place: string }[] = [
-  { kind: 'funding', text: 'Series B closed · Climate SaaS', place: 'Berlin, DE' },
-  { kind: 'hiring', text: '22 SDR roles opened · Cybersecurity', place: 'Tel Aviv, IL' },
-  { kind: 'leadership', text: 'New CRO appointed · Fintech', place: 'London, UK' },
-  { kind: 'tech', text: 'Migrating CRM · Logistics', place: 'Rotterdam, NL' },
-  { kind: 'rfp', text: 'Data platform tender · Public health', place: 'Madrid, ES' },
-  { kind: 'expansion', text: 'New APAC HQ · Payments', place: 'Singapore, SG' },
-  { kind: 'earnings', text: '"AI roadmap" cited 6× · Retail', place: 'Chicago, US' },
-  { kind: 'regulatory', text: 'Compliance deadline · Banking', place: 'Frankfurt, DE' },
-  { kind: 'hiring', text: 'Head of RevOps wanted · HR tech', place: 'Toronto, CA' },
-  { kind: 'funding', text: 'Growth round · Medtech', place: 'Boston, US' },
-  { kind: 'expansion', text: '3 new plants · Manufacturing', place: 'Pune, IN' },
-  { kind: 'tech', text: 'Moving to cloud ERP · Automotive', place: 'Nagoya, JP' },
+/** Cities used as network nodes, for ambient arcs and the small tags. */
+export const hubCities: [number, number][] = [
+  [40.71, -74.0], [37.77, -122.42], [41.88, -87.63], [29.76, -95.37], [47.61, -122.33], [25.76, -80.19],
+  [19.43, -99.13], [4.71, -74.07], [-12.05, -77.04], [-34.6, -58.38], [-22.91, -43.17], [45.5, -73.57],
+  [49.28, -123.12], [53.35, -6.26], [48.86, 2.35], [52.37, 4.9], [40.42, -3.7], [41.9, 12.5], [59.33, 18.07],
+  [52.23, 21.01], [50.45, 30.52], [41.01, 28.98], [30.04, 31.24], [6.52, 3.38], [-1.29, 36.82], [-26.2, 28.05],
+  [24.71, 46.68], [28.61, 77.21], [19.08, 72.88], [13.08, 80.27], [1.35, 103.82], [13.76, 100.5], [3.14, 101.69],
+  [-6.21, 106.85], [14.6, 120.98], [22.32, 114.17], [31.23, 121.47], [39.9, 116.4], [37.57, 126.98], [34.69, 135.5],
+  [-37.81, 144.96], [-27.47, 153.03], [-36.85, 174.76], [-31.95, 115.86],
 ];

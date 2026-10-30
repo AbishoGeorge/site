@@ -1,48 +1,64 @@
-import { geoEquirectangular, geoGraticule10, geoOrthographic, geoPath } from 'd3-geo';
+import { geoEquirectangular, geoGraticule10, geoInterpolate, geoOrthographic, geoPath } from 'd3-geo';
 import type { GeoPath, GeoPermissibleObjects, GeoProjection } from 'd3-geo';
 import { feature, mesh } from 'topojson-client';
 import type { GeometryCollection, Topology } from 'topojson-specification';
 import type { Feature, Geometry, MultiLineString } from 'geojson';
-import { signalKindTag, type AccountSignal } from './signals';
+import { ambientTags, hubCities, type ExampleSignal } from './signals';
 
-export type GlobePhase = 'intro' | 'scan' | 'lock' | 'reveal' | 'ready' | 'close';
+/**
+ * intro: the globe turns on its own · fly: camera travels to the next signal ·
+ * arrive: country lights up and the pin drops · show: the signal card is open ·
+ * leave: the card closes just before the next flight.
+ */
+export type GlobePhase = 'intro' | 'fly' | 'arrive' | 'show' | 'leave';
 
 export interface GlobeEngineOptions {
   canvas: HTMLCanvasElement;
-  signals: AccountSignal[];
+  signals: ExampleSignal[];
   onPhase: (phase: GlobePhase, index: number) => void;
-  /** Number of evidence arcs that have reached the pin for the current account. */
-  onEvidence: (landed: number) => void;
-  /** Card element the connector line runs to while an account is open. */
-  getCard: () => HTMLElement | null;
-  /** City label that follows the pin; positioned by the engine every frame. */
-  chip: HTMLElement | null;
-  /** Live coordinate readout. */
-  coords: HTMLElement | null;
+  /** Follows the pin every frame; the signal card hangs off it. */
+  anchor: HTMLElement | null;
+  /** Small tags that pop up at other cities while a signal is shown. */
+  tags: (HTMLElement | null)[];
   reducedMotion: boolean;
 }
 
-// Seconds spent in each phase of an account reveal.
-const INTRO_TIME = 1.2;
-const LOCK_TIME = 0.55;
-const REVEAL_TIME = 2.3;
-const READY_TIME = 4.4;
-const CLOSE_TIME = 0.5;
-const ARC_STAGGER = 0.35;
-const ARC_DURATION = 0.95;
+// Seconds.
+const INTRO_TIME = 1.0;
+const ARRIVE_TIME = 0.75;
+const SHOW_TIME = 4.4;
+const LEAVE_TIME = 0.35;
+const TAG_LIFE = 2.6;
+
+// A flight pulls back to the whole globe, turns it, then dives in. Fractions of the flight time.
+const PULL_BACK = 0.32;
+const DIVE_IN = 0.36;
 const DOT_STEPS = [1.0, 0.6];
 
 const DEG = Math.PI / 180;
 const TAU = Math.PI * 2;
 
+// Palette: indigo land on a pearl sphere, a warm orange for the active signal.
+const INK = '67, 56, 202';
+const INK_SOFT = '99, 102, 241';
+const VIOLET = '139, 92, 246';
+const WARM = '249, 115, 22';
+const WARM_SOFT = '251, 146, 60';
+
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeOutBack = (t: number) => {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+};
 const smoothstep = (t: number) => {
   const c = clamp01(t);
   return c * c * (3 - 2 * c);
 };
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 function toVec(lat: number, lng: number): [number, number, number] {
   const p = lat * DEG;
@@ -50,41 +66,21 @@ function toVec(lat: number, lng: number): [number, number, number] {
   return [Math.cos(p) * Math.cos(l), Math.cos(p) * Math.sin(l), Math.sin(p)];
 }
 
-function angularDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const a = toVec(lat1, lng1);
-  const b = toVec(lat2, lng2);
+function angle(a: [number, number, number], b: [number, number, number]) {
   return Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))) / DEG;
-}
-
-/** Point reached by travelling `dist` degrees from (lat, lng) on `bearing`. */
-function destination(lat: number, lng: number, bearing: number, dist: number): [number, number] {
-  const p1 = lat * DEG;
-  const l1 = lng * DEG;
-  const b = bearing * DEG;
-  const d = dist * DEG;
-  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(b));
-  const l2 = l1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
-  return [p2 / DEG, l2 / DEG];
 }
 
 interface Arc {
   from: [number, number, number];
-  /** Which side of the chord the arc bows toward. */
-  bend: number;
-  start: number;
-  tag: string;
-}
-
-interface Blip {
-  idx: number;
+  to: [number, number, number];
+  omega: number;
+  lift: number;
   born: number;
 }
 
-interface Star {
-  x: number;
-  y: number;
-  r: number;
-  phase: number;
+interface Tag {
+  hub: number;
+  born: number;
 }
 
 export class GlobeEngine {
@@ -92,7 +88,7 @@ export class GlobeEngine {
   private ctx: CanvasRenderingContext2D;
   private W = 0;
   private H = 0;
-  private dpr = 1;
+  private dpr = 0;
   private wide = false;
   private baseX = 0;
   private baseY = 0;
@@ -100,9 +96,9 @@ export class GlobeEngine {
   private focusY = 0;
   private R0 = 1;
 
-  // View state: the lat/lng at the centre of the globe, zoom and screen position.
-  private cLng = -30;
-  private cLat = 22;
+  // Camera: lat/lng at the centre of the view, zoom, and where the globe sits on screen.
+  private cLng = -20;
+  private cLat = 24;
   private scale = 1;
   private R = 1;
   private tx = 0;
@@ -112,9 +108,9 @@ export class GlobeEngine {
   private phaseT = 0;
   private time = 0;
   private index = -1;
-  private fly = { lng0: 0, lat0: 0, lng1: 0, lat1: 0, s0: 1, s1: 1, dip: 0, dur: 1 };
+  private fly = { along: geoInterpolate([0, 0], [0, 0]), s0: 1, s1: 1, dur: 1 };
 
-  // Land dots.
+  // Land dots: a coarse grid for the whole globe and a fine one that fades in when zoomed.
   private ready = false;
   private n = 0;
   private dx = new Float32Array(0);
@@ -124,8 +120,8 @@ export class GlobeEngine {
   private dLevel = new Uint8Array(0);
   private buckets: Float32Array[] = [];
   private bucketCount = new Int32Array(10);
-  private hlXY = new Float32Array(0);
-  private hlCount = 0;
+  private warmXY = new Float32Array(0);
+  private warmCount = 0;
 
   private countries: Feature<Geometry, { name: string }>[] = [];
   private borders: MultiLineString | null = null;
@@ -133,18 +129,19 @@ export class GlobeEngine {
   private projection: GeoProjection = geoOrthographic().clipAngle(90).precision(0.6);
   private path: GeoPath<unknown, GeoPermissibleObjects>;
   private countryIndexByName = new Map<string, number>();
+  private hubs = hubCities.map(([lat, lng]) => toVec(lat, lng));
 
   private hlCountry = -1;
   private hl = 0;
-  private pinAlpha = 0;
+  private pin = 0;
+  private arriveAt = -10;
   private target: [number, number, number] = [1, 0, 0];
   private visited: number[] = [];
   private arcs: Arc[] = [];
-  private blips: Blip[] = [];
-  private nextBlip = 0;
-  private stars: Star[] = [];
-  private lockAt = 0;
-  private lastHud = 0;
+  private nextArc = 0;
+  private tags: (Tag | null)[] = [];
+  private nextTag = 0;
+  private tagLabel = 0;
 
   private raf = 0;
   private last = 0;
@@ -153,19 +150,19 @@ export class GlobeEngine {
   private resizeObserver: ResizeObserver;
   private wideQuery: MediaQueryList;
   private dprQuery: MediaQueryList | null = null;
-  private landed = 0;
 
   constructor(opts: GlobeEngineOptions) {
     this.opts = opts;
     this.ctx = opts.canvas.getContext('2d')!;
     this.path = geoPath(this.projection, this.ctx);
+    this.tags = opts.tags.map(() => null);
     this.wideQuery = window.matchMedia('(min-width: 1280px)');
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(opts.canvas.parentElement ?? opts.canvas);
     this.watchDpr();
     this.resize();
     this.load().catch(() => {
-      // One retry for a flaky network or a chunk that changed mid-deploy; the starfield stays up meanwhile.
+      // One retry for a flaky network or a chunk that changed mid-deploy.
       window.setTimeout(() => {
         if (!this.disposed) this.load().catch(() => undefined);
       }, 2000);
@@ -193,6 +190,7 @@ export class GlobeEngine {
     this.buildDots();
     this.ready = true;
     this.setPhase('intro');
+    this.draw();
   }
 
   /** Rasterise country shapes to an equirectangular bitmap and sample it into an even dot grid. */
@@ -220,7 +218,6 @@ export class GlobeEngine {
     const zs: number[] = [];
     const cs: number[] = [];
     const ls: number[] = [];
-    // A coarse grid for the whole-globe view and a fine one that fades in as the camera zooms.
     DOT_STEPS.forEach((step, level) => {
       let row = 0;
       for (let lat = -56; lat <= 80; lat += step, row++) {
@@ -248,7 +245,7 @@ export class GlobeEngine {
     this.dCountry = Int16Array.from(cs);
     this.dLevel = Uint8Array.from(ls);
     this.buckets = Array.from({ length: 10 }, () => new Float32Array(this.n * 2));
-    this.hlXY = new Float32Array(this.n * 4);
+    this.warmXY = new Float32Array(this.n * 4);
   }
 
   private resize() {
@@ -262,34 +259,27 @@ export class GlobeEngine {
     this.W = W;
     this.H = H;
     this.dpr = dpr;
+    this.wide = wide;
     const c = this.opts.canvas;
-    c.width = Math.round(W * this.dpr);
-    c.height = Math.round(H * this.dpr);
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
     c.style.width = `${W}px`;
     c.style.height = `${H}px`;
-    this.wide = wide;
 
-    if (this.wide) {
-      this.baseX = W * 0.71;
+    if (wide) {
+      this.baseX = W * 0.7;
       this.baseY = H * 0.5;
       this.R0 = Math.min(H * 0.4, W * 0.25);
-      const cardLeft = W * 0.965 - 360;
-      this.focusX = Math.max(W * 0.5, Math.min(W * 0.62, cardLeft - W * 0.12));
-      this.focusY = H * 0.4;
+      // Leave room on the right for the card that hangs off the pin.
+      this.focusX = Math.min(W * 0.6, W - 420);
+      this.focusY = H * 0.5;
     } else {
       this.baseX = W / 2;
-      this.baseY = H * 0.4;
-      this.R0 = Math.min(W * 0.43, H * 0.36);
+      this.baseY = H * 0.42;
+      this.R0 = Math.min(W * 0.42, H * 0.36);
       this.focusX = W / 2;
-      this.focusY = H * 0.25;
+      this.focusY = H * 0.3;
     }
-
-    this.stars = Array.from({ length: Math.round((W * H) / 9000) }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: Math.random() < 0.85 ? 0.6 : 1.1,
-      phase: Math.random() * TAU,
-    }));
     // Resizing the backing store clears it, so repaint now rather than leave a blank frame.
     this.draw();
   }
@@ -327,121 +317,138 @@ export class GlobeEngine {
     this.opts.onPhase(phase, this.index);
   }
 
+  /** Plan the next flight: along the great circle to the next signal. */
   private startFly() {
     const signals = this.opts.signals;
     this.index = (this.index + 1) % signals.length;
     const s = signals[this.index];
-    let dLng = (s.lng - this.cLng) % 360;
-    if (dLng > 180) dLng -= 360;
-    if (dLng < -180) dLng += 360;
-    const dist = angularDistance(this.cLat, this.cLng, s.lat, s.lng);
-    const mid = (this.scale + s.zoom) / 2;
+    const dist = angle(toVec(this.cLat, this.cLng), toVec(s.lat, s.lng));
     this.fly = {
-      lng0: this.cLng,
-      lat0: this.cLat,
-      lng1: this.cLng + dLng,
-      lat1: s.lat,
+      along: geoInterpolate([this.cLng, this.cLat], [s.lng, s.lat]),
       s0: this.scale,
       s1: s.zoom,
-      dip: this.opts.reducedMotion ? 0 : Math.max(0, mid - 0.95),
-      dur: this.opts.reducedMotion ? 1.4 : 2.6 + 1.0 * clamp01(dist / 140),
+      dur: this.opts.reducedMotion ? 1.2 : 3.0 + 0.8 * clamp01(dist / 120),
     };
     this.target = toVec(s.lat, s.lng);
-    this.arcs = [];
-    this.setPhase('scan');
+    this.setPhase('fly');
   }
 
-  private spawnArcs() {
-    const s = this.opts.signals[this.index];
-    const base = Math.random() * 360;
-    this.arcs = s.evidence.map((ev, i) => {
-      const dist = 7 + Math.random() * 6;
-      const [lat, lng] = destination(s.lat, s.lng, base + i * 120 + (Math.random() - 0.5) * 40, dist);
-      return {
-        from: toVec(lat, lng),
-        bend: Math.random() < 0.5 ? -1 : 1,
-        start: this.time + i * ARC_STAGGER,
-        tag: signalKindTag[ev.kind],
-      };
-    });
+  /** Zoom over a flight: ease out to the whole globe, a slight extra breath while it turns, ease back in. */
+  private flightScale(t: number) {
+    const { s0, s1 } = this.fly;
+    if (t < PULL_BACK) return lerp(s0, 1, easeInOutCubic(t / PULL_BACK));
+    if (t > 1 - DIVE_IN) return lerp(1, s1, easeInOutCubic((t - (1 - DIVE_IN)) / DIVE_IN));
+    const u = (t - PULL_BACK) / (1 - PULL_BACK - DIVE_IN);
+    return 1 - 0.05 * Math.pow(Math.sin(Math.PI * u), 2);
   }
 
   private update(dt: number) {
     if (!this.ready) return;
     this.time += dt;
     this.phaseT += dt;
-    const drift = this.opts.reducedMotion ? 0.15 : 0.5;
+    const drift = this.opts.reducedMotion ? 0.1 : 0.45;
 
     switch (this.phase) {
       case 'intro':
-        this.cLng += (this.opts.reducedMotion ? 2 : 9) * dt;
+        this.cLng += (this.opts.reducedMotion ? 2 : 10) * dt;
         if (this.phaseT > INTRO_TIME) this.startFly();
         break;
-      case 'scan': {
-        const f = this.fly;
-        const t = clamp01(this.phaseT / f.dur);
-        const e = easeInOutCubic(t);
-        this.cLng = lerp(f.lng0, f.lng1, e);
-        this.cLat = lerp(f.lat0, f.lat1, e);
-        const dipped = lerp(f.s0, f.s1, e) - f.dip * Math.pow(Math.sin(Math.PI * t), 0.6);
-        // The dip curve and the eased zoom peak at different times, so floor it at the whole-globe view.
-        this.scale = f.dip > 0 ? Math.max(Math.min(0.95, f.s0, f.s1), dipped) : dipped;
+      case 'fly': {
+        const t = clamp01(this.phaseT / this.fly.dur);
+        // The turn starts a little after the pull-back and settles a little before the dive ends.
+        const [lng, lat] = this.fly.along(easeInOutSine(clamp01((t - 0.1) / 0.78)));
+        this.cLng = lng;
+        this.cLat = lat;
+        this.scale = this.opts.reducedMotion ? lerp(this.fly.s0, this.fly.s1, easeInOutSine(t)) : this.flightScale(t);
         if (t >= 1) {
           this.hlCountry = this.countryIndexByName.get(this.opts.signals[this.index].country) ?? -1;
-          this.lockAt = this.time;
-          this.setPhase('lock');
+          this.arriveAt = this.time;
+          this.setPhase('arrive');
         }
         break;
       }
-      case 'lock':
+      case 'arrive':
         this.cLng += drift * dt;
-        if (this.phaseT > LOCK_TIME) {
-          this.spawnArcs();
-          this.setPhase('reveal');
-        }
+        if (this.phaseT > ARRIVE_TIME) this.setPhase('show');
         break;
-      case 'reveal':
+      case 'show':
         this.cLng += drift * dt;
-        this.scale *= 1 + 0.01 * dt;
-        if (this.phaseT > REVEAL_TIME) {
+        this.scale *= 1 + 0.012 * dt;
+        if (this.phaseT > SHOW_TIME) {
           if (!this.visited.includes(this.index)) this.visited.push(this.index);
-          this.setPhase('ready');
+          this.setPhase('leave');
         }
         break;
-      case 'ready':
+      case 'leave':
         this.cLng += drift * dt;
-        this.scale *= 1 + 0.01 * dt;
-        if (this.phaseT > READY_TIME) this.setPhase('close');
-        break;
-      case 'close':
-        this.cLng += drift * dt;
-        if (this.phaseT > CLOSE_TIME) this.startFly();
+        if (this.phaseT > LEAVE_TIME) this.startFly();
         break;
     }
 
-    const showing = this.phase === 'lock' || this.phase === 'reveal' || this.phase === 'ready';
-    this.hl = clamp01(this.hl + (showing ? dt / 0.6 : -dt / 0.45));
-    this.pinAlpha = clamp01(this.pinAlpha + (showing ? dt / 0.3 : -dt / 0.35));
-    if (this.hl === 0 && !showing) this.hlCountry = -1;
+    const lit = this.phase === 'arrive' || this.phase === 'show';
+    this.hl = clamp01(this.hl + (lit ? dt / 0.9 : -dt / 0.6));
+    this.pin = clamp01(this.pin + (lit ? dt / 0.35 : -dt / 0.4));
+    if (this.hl === 0 && !lit) this.hlCountry = -1;
 
-    // The card's evidence rows fill in as arcs land, on the engine's clock so they pause with it.
-    let landed = 0;
-    for (const arc of this.arcs) if (this.time - arc.start >= ARC_DURATION) landed++;
-    if (landed !== this.landed) {
-      this.landed = landed;
-      this.opts.onEvidence(landed);
+    if (!this.opts.reducedMotion) {
+      // A steady trickle of arcs between cities keeps the network feeling live.
+      if (this.time > this.nextArc) {
+        this.nextArc = this.time + 0.45 + Math.random() * 0.35;
+        this.spawnArc();
+      }
+      this.arcs = this.arcs.filter((a) => this.time - a.born < 2.6);
     }
 
-    // Ambient activity: brief blips on random land dots.
-    if (!this.opts.reducedMotion && this.time > this.nextBlip && this.n) {
-      this.nextBlip = this.time + 0.12 + Math.random() * 0.14;
-      this.blips.push({ idx: Math.floor(Math.random() * this.n), born: this.time });
-      if (this.blips.length > 24) this.blips.shift();
+    // While a signal is open, a few other cities flash short tags.
+    if (this.phase === 'show' && this.time > this.nextTag) {
+      this.nextTag = this.time + 0.9 + Math.random() * 0.5;
+      this.spawnTag();
+    }
+    if (this.phase === 'fly') this.nextTag = 0;
+  }
+
+  private spawnArc() {
+    const p = [0, 0, 0];
+    for (let tries = 0; tries < 8; tries++) {
+      const a = this.hubs[Math.floor(Math.random() * this.hubs.length)];
+      const b = this.hubs[Math.floor(Math.random() * this.hubs.length)];
+      const d = angle(a, b);
+      if (d < 20 || d > 75) continue;
+      this.project((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, p);
+      if (p[2] < 0.25) continue;
+      this.arcs.push({ from: a, to: b, omega: d * DEG, lift: 0.06 + d / 600, born: this.time });
+      return;
     }
   }
 
-  /** Project a unit-sphere (or lifted) point to screen space for the current view. */
-  private project(x: number, y: number, z: number, out: Float32Array | number[]) {
+  private spawnTag() {
+    const slot = this.tags.findIndex((t) => !t || this.time - t.born > TAG_LIFE);
+    if (slot < 0) return;
+    const p = [0, 0, 0];
+    const pin = [0, 0, 0];
+    this.project(this.target[0], this.target[1], this.target[2], pin);
+    for (let tries = 0; tries < 12; tries++) {
+      const hub = Math.floor(Math.random() * this.hubs.length);
+      if (this.tags.some((t) => t && t.hub === hub && this.time - t.born < TAG_LIFE)) continue;
+      const v = this.hubs[hub];
+      const d = angle(v, this.target);
+      if (d < 4 || d > 45) continue;
+      this.project(v[0], v[1], v[2], p);
+      if (p[2] < 0.3 || p[0] < 70 || p[0] > this.W - 70 || p[1] < 70 || p[1] > this.H - 90) continue;
+      // Keep clear of the signal card, which hangs right of the pin (or below it on narrow screens).
+      const dxp = p[0] - pin[0];
+      const dyp = p[1] - pin[1];
+      if (this.wide ? dxp > -40 && dxp < 400 && Math.abs(dyp) < 150 : dyp > -30 && Math.abs(dxp) < 190) continue;
+      if (Math.hypot(dxp, dyp) < 70) continue;
+      this.tags[slot] = { hub, born: this.time };
+      const label = this.opts.tags[slot]?.querySelector('[data-label]');
+      if (label) label.textContent = ambientTags[this.tagLabel++ % ambientTags.length];
+      return;
+    }
+  }
+
+  /** Project a unit-sphere (or lifted) point for the current view. Returns false when hidden behind the globe. */
+  private project(x: number, y: number, z: number, out: number[]) {
     const lr = -this.cLng * DEG;
     const pr = -this.cLat * DEG;
     const cl = Math.cos(lr);
@@ -464,108 +471,112 @@ export class GlobeEngine {
     if (!W) return;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+    if (!this.ready) return;
 
-    const k = smoothstep((this.scale - 1) / 0.9);
+    const k = smoothstep((this.scale - 1) / 0.8);
     this.R = this.R0 * this.scale;
     this.tx = lerp(this.baseX, this.focusX, k);
     this.ty = lerp(this.baseY, this.focusY, k);
     const { R, tx, ty } = this;
+    const zoomed = smoothstep((this.scale - 1.2) / 1.0);
 
-    this.drawStars();
-    if (!this.ready) return;
+    // Soft contact shadow while the whole globe is in view.
+    if (k < 0.98) {
+      ctx.save();
+      ctx.globalAlpha = 1 - k;
+      ctx.translate(tx, ty + R * 1.1);
+      ctx.scale(1, 0.12);
+      const sh = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 0.8);
+      sh.addColorStop(0, 'rgba(49, 46, 129, 0.22)');
+      sh.addColorStop(1, 'rgba(49, 46, 129, 0)');
+      ctx.fillStyle = sh;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 0.8, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
 
-    // Atmosphere halo.
-    const halo = ctx.createRadialGradient(tx, ty, R * 0.95, tx, ty, R * 1.28);
-    halo.addColorStop(0, 'rgba(76, 150, 255, 0.32)');
-    halo.addColorStop(0.35, 'rgba(56, 120, 230, 0.12)');
-    halo.addColorStop(1, 'rgba(40, 90, 200, 0)');
+    // Atmosphere.
+    const halo = ctx.createRadialGradient(tx, ty, R * 0.96, tx, ty, R * 1.22);
+    halo.addColorStop(0, `rgba(${INK_SOFT}, 0.28)`);
+    halo.addColorStop(0.4, `rgba(${VIOLET}, 0.1)`);
+    halo.addColorStop(1, `rgba(${VIOLET}, 0)`);
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(tx, ty, R * 1.28, 0, TAU);
+    ctx.arc(tx, ty, R * 1.22, 0, TAU);
     ctx.fill();
 
-    // Ocean sphere, lit from the upper left.
-    const ocean = ctx.createRadialGradient(tx - R * 0.35, ty - R * 0.4, R * 0.05, tx, ty, R * 1.05);
-    ocean.addColorStop(0, '#163a6e');
-    ocean.addColorStop(0.45, '#0c2147');
-    ocean.addColorStop(1, '#040b1c');
-    ctx.fillStyle = ocean;
-    ctx.beginPath();
-    ctx.arc(tx, ty, R, 0, TAU);
-    ctx.fill();
-
-    const rim = ctx.createRadialGradient(tx, ty, R * 0.78, tx, ty, R);
-    rim.addColorStop(0, 'rgba(90, 160, 255, 0)');
-    rim.addColorStop(1, 'rgba(110, 180, 255, 0.28)');
-    ctx.fillStyle = rim;
+    // Pearl sphere, lit from the upper left.
+    const sphere = ctx.createRadialGradient(tx - R * 0.38, ty - R * 0.42, R * 0.05, tx, ty, R * 1.02);
+    sphere.addColorStop(0, '#ffffff');
+    sphere.addColorStop(0.55, '#f3f4ff');
+    sphere.addColorStop(1, '#d9ddff');
+    ctx.fillStyle = sphere;
     ctx.beginPath();
     ctx.arc(tx, ty, R, 0, TAU);
     ctx.fill();
 
     this.projection.rotate([-this.cLng, -this.cLat]).translate([tx, ty]).scale(R);
-    const zoomed = smoothstep((this.scale - 1.2) / 1.2);
 
     ctx.lineWidth = 0.6;
-    ctx.strokeStyle = 'rgba(120, 170, 255, 0.06)';
+    ctx.strokeStyle = `rgba(${INK}, 0.06)`;
     ctx.beginPath();
     this.path(this.graticule);
     ctx.stroke();
 
     if (this.borders) {
       ctx.lineWidth = 0.7;
-      ctx.strokeStyle = `rgba(130, 185, 255, ${0.07 + 0.16 * zoomed})`;
+      ctx.strokeStyle = `rgba(${INK}, ${0.05 + 0.16 * zoomed})`;
       ctx.beginPath();
       this.path(this.borders);
       ctx.stroke();
     }
 
+    const p = [0, 0, 0];
+    const pinVisible = this.project(this.target[0], this.target[1], this.target[2], p) && p[2] > 0;
+    const pinX = p[0];
+    const pinY = p[1];
+    // The country is revealed outward from the pin.
+    const revealDeg = 2 + 28 * easeOutCubic(clamp01((this.time - this.arriveAt) / 1.2));
     const hlFeature = this.hlCountry >= 0 ? this.countries[this.hlCountry] : null;
-    if (hlFeature && this.hl > 0) {
-      const pulse = 0.85 + 0.15 * Math.sin(this.time * 3);
+    if (hlFeature && this.hl > 0 && pinVisible) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pinX, pinY, revealDeg * DEG * R * 1.1, 0, TAU);
+      ctx.clip();
       ctx.beginPath();
       this.path(hlFeature);
-      ctx.fillStyle = `rgba(255, 176, 72, ${0.09 * this.hl * pulse})`;
+      ctx.fillStyle = `rgba(${WARM}, ${0.1 * this.hl})`;
       ctx.fill();
       ctx.lineJoin = 'round';
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = `rgba(255, 170, 60, ${0.12 * this.hl})`;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = `rgba(${WARM}, ${0.1 * this.hl})`;
       ctx.stroke();
-      ctx.lineWidth = 1.2;
-      ctx.strokeStyle = `rgba(255, 205, 130, ${0.85 * this.hl})`;
+      ctx.lineWidth = 1.3;
+      ctx.strokeStyle = `rgba(${WARM}, ${0.75 * this.hl})`;
       ctx.stroke();
+      ctx.restore();
     }
 
-    this.drawDots();
+    this.drawDots(revealDeg);
+    this.drawHubs(zoomed);
+    this.drawArcs(zoomed);
     this.drawVisited();
-    this.drawBlips();
-    this.drawArcs();
-    this.drawPin();
+    if (pinVisible) this.drawPin(pinX, pinY);
 
     // Soft specular sheen.
-    const sheen = ctx.createRadialGradient(tx - R * 0.45, ty - R * 0.5, 0, tx - R * 0.45, ty - R * 0.5, R * 0.9);
-    sheen.addColorStop(0, 'rgba(200, 225, 255, 0.07)');
-    sheen.addColorStop(1, 'rgba(200, 225, 255, 0)');
+    const sheen = ctx.createRadialGradient(tx - R * 0.45, ty - R * 0.5, 0, tx - R * 0.45, ty - R * 0.5, R * 0.8);
+    sheen.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+    sheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
     ctx.fillStyle = sheen;
     ctx.beginPath();
     ctx.arc(tx, ty, R, 0, TAU);
     ctx.fill();
 
-    this.drawConnector();
-    this.updateOverlays();
+    this.updateOverlays(pinVisible, pinX, pinY);
   }
 
-  private drawStars() {
-    const { ctx, W } = this;
-    const shift = ((this.cLng * 1.6) % W + W) % W;
-    for (const s of this.stars) {
-      const a = this.opts.reducedMotion ? 0.35 : 0.2 + 0.25 * (0.5 + 0.5 * Math.sin(this.time * 1.3 + s.phase));
-      ctx.fillStyle = `rgba(200, 220, 255, ${a})`;
-      const x = (s.x - shift + W) % W;
-      ctx.fillRect(x, s.y, s.r, s.r);
-    }
-  }
-
-  private drawDots() {
+  private drawDots(revealDeg: number) {
     const { ctx, W, H, R, tx, ty } = this;
     const lr = -this.cLng * DEG;
     const pr = -this.cLat * DEG;
@@ -575,17 +586,21 @@ export class GlobeEngine {
     const sp = Math.sin(pr);
     const count = this.bucketCount;
     count.fill(0);
-    this.hlCount = 0;
+    this.warmCount = 0;
 
-    const hlOn = this.hl > 0 && this.hlCountry >= 0;
-    const rippleOn = this.pinAlpha > 0 && !this.opts.reducedMotion;
-    const [Tx, Ty, Tz] = this.target;
-    const rippleAge = this.time - this.lockAt;
-    const rippleR = (rippleAge % 2.4) * 7; // degrees
-    const cosMax = Math.cos(18 * DEG);
-    const margin = 6;
     const fine = smoothstep((this.scale - 1.35) / 0.5);
     const levelAlpha = [1 - fine, fine];
+    const hlOn = this.hl > 0 && this.hlCountry >= 0;
+    const [Tx, Ty, Tz] = this.target;
+    const cosReveal = Math.cos(revealDeg * DEG);
+    const age = this.time - this.arriveAt;
+    const ripple = this.opts.reducedMotion ? -1 : (age % 2.2) * 4.5; // degrees from the pin
+    const cosRipple = Math.cos(11 * DEG);
+    // A slow highlight band that sweeps around the globe.
+    const sweep = this.time * 0.22;
+    const swX = Math.cos(sweep);
+    const swY = Math.sin(sweep);
+    const margin = 6;
 
     for (let i = 0; i < this.n; i++) {
       const level = this.dLevel[i];
@@ -601,43 +616,45 @@ export class GlobeEngine {
       const sy = ty - R * (Z * cp + x1 * sp);
       if (sx < -margin || sx > W + margin || sy < -margin || sy > H + margin) continue;
 
-      let boost = 0;
-      if (hlOn && this.dCountry[i] === this.hlCountry) boost = 0.55 * this.hl;
-      if (rippleOn) {
+      let warm = 0;
+      if (hlOn || this.pin > 0) {
         const c = X * Tx + Y * Ty + Z * Tz;
-        if (c > cosMax) {
+        if (hlOn && this.dCountry[i] === this.hlCountry && c > cosReveal) warm = 0.6 * this.hl;
+        if (ripple >= 0 && this.pin > 0 && c > cosRipple) {
           const d = Math.acos(Math.min(1, c)) / DEG;
-          const band = 1 - Math.abs(d - rippleR) / 1.6;
-          if (band > 0) boost = Math.max(boost, band * this.pinAlpha * (1 - rippleR / 18));
+          const band = 1 - Math.abs(d - ripple) / 1.2;
+          if (band > 0) warm = Math.max(warm, 0.7 * band * this.pin * (1 - ripple / 10));
         }
       }
-      if (boost > 0.02) {
-        const o = this.hlCount * 4;
-        this.hlXY[o] = sx;
-        this.hlXY[o + 1] = sy;
-        this.hlXY[o + 2] = boost;
-        this.hlXY[o + 3] = level;
-        this.hlCount++;
+      if (warm > 0.03) {
+        const o = this.warmCount * 4;
+        this.warmXY[o] = sx;
+        this.warmXY[o + 1] = sy;
+        this.warmXY[o + 2] = warm;
+        this.warmXY[o + 3] = level;
+        this.warmCount++;
         continue;
       }
-      const b = level * 5 + (depth > 0.8 ? 4 : Math.floor(depth * 5));
-      const o = count[b] * 2;
-      this.buckets[b][o] = sx;
-      this.buckets[b][o + 1] = sy;
-      count[b]++;
+      let b = depth > 0.8 ? 4 : Math.floor(depth * 5);
+      if (b < 4 && X * swX + Y * swY > 0.985) b++;
+      const slot = level * 5 + b;
+      const o = count[slot] * 2;
+      const arr = this.buckets[slot];
+      arr[o] = sx;
+      arr[o + 1] = sy;
+      count[slot]++;
     }
 
-    const alphas = [0.16, 0.28, 0.42, 0.6, 0.78];
+    const alphas = [0.14, 0.24, 0.38, 0.55, 0.72];
     for (let b = 0; b < 10; b++) {
       if (!count[b]) continue;
       const level = b < 5 ? 0 : 1;
-      const spacing = R * DOT_STEPS[level] * DEG;
-      const baseSize = Math.max(1, spacing * 0.3);
-      const round = baseSize > 2;
+      const baseSize = Math.max(1, R * DOT_STEPS[level] * DEG * 0.32);
       const size = baseSize * (0.6 + 0.1 * (b % 5));
       const half = size / 2;
+      const round = size > 2;
       const arr = this.buckets[b];
-      ctx.fillStyle = `rgba(118, 178, 255, ${alphas[b % 5] * levelAlpha[level]})`;
+      ctx.fillStyle = `rgba(${INK}, ${alphas[b % 5] * levelAlpha[level]})`;
       ctx.beginPath();
       for (let j = 0, m = count[b] * 2; j < m; j += 2) {
         if (round) {
@@ -650,20 +667,102 @@ export class GlobeEngine {
       ctx.fill();
     }
 
-    // Highlighted dots (target country and the ripple), drawn individually for per-dot glow.
-    // They follow the same coarse/fine crossfade as the rest of the land.
-    for (let j = 0; j < this.hlCount; j++) {
+    for (let j = 0; j < this.warmCount; j++) {
       const o = j * 4;
-      const x = this.hlXY[o];
-      const y = this.hlXY[o + 1];
-      const a = Math.min(1, this.hlXY[o + 2]);
-      const level = this.hlXY[o + 3];
-      const size = Math.max(1, R * DOT_STEPS[level] * DEG * 0.3) * (0.95 + 0.5 * a);
-      const alpha = (0.45 + 0.55 * a) * levelAlpha[level];
-      ctx.fillStyle = `rgba(255, ${Math.round(200 + 40 * a)}, ${Math.round(120 + 100 * a)}, ${alpha})`;
+      const a = Math.min(1, this.warmXY[o + 2]);
+      const level = this.warmXY[o + 3];
+      const size = Math.max(1, R * DOT_STEPS[level] * DEG * 0.32) * (1 + 0.45 * a);
+      ctx.fillStyle = `rgba(${WARM}, ${(0.35 + 0.65 * a) * levelAlpha[level]})`;
       ctx.beginPath();
-      ctx.arc(x, y, size / 2, 0, TAU);
+      ctx.arc(this.warmXY[o], this.warmXY[o + 1], size / 2, 0, TAU);
       ctx.fill();
+    }
+  }
+
+  private drawHubs(zoomed: number) {
+    const { ctx } = this;
+    const p = [0, 0, 0];
+    const a = 0.55 * (1 - zoomed * 0.5);
+    for (const v of this.hubs) {
+      if (!this.project(v[0], v[1], v[2], p) || p[2] <= 0.05) continue;
+      const da = a * Math.min(1, p[2] * 2);
+      ctx.fillStyle = `rgba(${INK_SOFT}, ${da * 0.25})`;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], 4.5, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = `rgba(${INK}, ${da})`;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], 1.6, 0, TAU);
+      ctx.fill();
+    }
+    // Pulse on cities currently showing a tag.
+    for (const t of this.tags) {
+      if (!t) continue;
+      const age = (this.time - t.born) / TAG_LIFE;
+      if (age >= 1) continue;
+      const v = this.hubs[t.hub];
+      if (!this.project(v[0], v[1], v[2], p) || p[2] <= 0) continue;
+      const ring = (age * 2.2) % 1;
+      ctx.strokeStyle = `rgba(${VIOLET}, ${0.5 * (1 - ring)})`;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], 3 + ring * 14, 0, TAU);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(${VIOLET}, 0.95)`;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], 2.6, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  private drawArcs(zoomed: number) {
+    if (!this.arcs.length) return;
+    const { ctx } = this;
+    const fade = 1 - zoomed * 0.75;
+    const steps = 36;
+    const p = [0, 0, 0];
+    const q = [0, 0, 0];
+    ctx.lineCap = 'round';
+    for (const arc of this.arcs) {
+      const age = this.time - arc.born;
+      const head = easeInOutSine(clamp01(age / 1.5));
+      const tail = easeInOutSine(clamp01((age - 0.55) / 1.6));
+      if (head <= tail) continue;
+      const so = Math.sin(arc.omega) || 1;
+      const at = (u: number, out: number[]) => {
+        const a = Math.sin((1 - u) * arc.omega) / so;
+        const b = Math.sin(u * arc.omega) / so;
+        const h = 1 + arc.lift * Math.sin(Math.PI * u);
+        return this.project(
+          (arc.from[0] * a + arc.to[0] * b) * h,
+          (arc.from[1] * a + arc.to[1] * b) * h,
+          (arc.from[2] * a + arc.to[2] * b) * h,
+          out
+        );
+      };
+      let prevOk = at(tail, q);
+      for (let i = 1; i <= steps; i++) {
+        const u = tail + ((head - tail) * i) / steps;
+        const ok = at(u, p);
+        if (ok && prevOk) {
+          const rel = i / steps;
+          ctx.strokeStyle = `rgba(${rel > 0.5 ? VIOLET : INK_SOFT}, ${0.55 * rel * fade})`;
+          ctx.lineWidth = 0.8 + 1.2 * rel;
+          ctx.beginPath();
+          ctx.moveTo(q[0], q[1]);
+          ctx.lineTo(p[0], p[1]);
+          ctx.stroke();
+        }
+        q[0] = p[0];
+        q[1] = p[1];
+        prevOk = ok;
+      }
+      if (age < 1.5 && at(head, p)) {
+        ctx.fillStyle = `rgba(${VIOLET}, ${0.9 * fade})`;
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 2.2, 0, TAU);
+        ctx.fill();
+      }
     }
   }
 
@@ -671,272 +770,89 @@ export class GlobeEngine {
     const { ctx } = this;
     const p = [0, 0, 0];
     for (const idx of this.visited) {
-      if (idx === this.index && this.pinAlpha > 0) continue;
+      if (idx === this.index && this.pin > 0) continue;
       const s = this.opts.signals[idx];
       const v = toVec(s.lat, s.lng);
       if (!this.project(v[0], v[1], v[2], p) || p[2] <= 0) continue;
-      const pulse = 0.5 + 0.5 * Math.sin(this.time * 2 + idx);
-      const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 10);
-      g.addColorStop(0, `rgba(255, 190, 100, ${0.45 + 0.2 * pulse})`);
-      g.addColorStop(1, 'rgba(255, 190, 100, 0)');
+      const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 9);
+      g.addColorStop(0, `rgba(${WARM_SOFT}, 0.45)`);
+      g.addColorStop(1, `rgba(${WARM_SOFT}, 0)`);
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(p[0], p[1], 10, 0, TAU);
+      ctx.arc(p[0], p[1], 9, 0, TAU);
       ctx.fill();
-      ctx.fillStyle = 'rgba(255, 225, 170, 0.95)';
+      ctx.fillStyle = `rgba(${WARM}, 0.95)`;
       ctx.beginPath();
-      ctx.arc(p[0], p[1], 2, 0, TAU);
-      ctx.fill();
-    }
-  }
-
-  private drawBlips() {
-    const { ctx } = this;
-    const p = [0, 0, 0];
-    const life = 1.6;
-    for (const b of this.blips) {
-      const age = (this.time - b.born) / life;
-      if (age >= 1) continue;
-      if (!this.project(this.dx[b.idx], this.dy[b.idx], this.dz[b.idx], p) || p[2] <= 0.1) continue;
-      const a = (1 - age) * Math.min(1, p[2] * 1.4);
-      ctx.strokeStyle = `rgba(150, 205, 255, ${0.55 * a})`;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(p[0], p[1], 2 + easeOutCubic(age) * 12, 0, TAU);
-      ctx.stroke();
-      ctx.fillStyle = `rgba(220, 240, 255, ${a})`;
-      ctx.beginPath();
-      ctx.arc(p[0], p[1], 1.5, 0, TAU);
+      ctx.arc(p[0], p[1], 2.2, 0, TAU);
       ctx.fill();
     }
   }
 
-  private drawArcs() {
-    if (!this.arcs.length) return;
+  private drawPin(x: number, y: number) {
+    if (this.pin <= 0) return;
     const { ctx } = this;
-    const fade = this.phase === 'close' || this.phase === 'scan' ? this.pinAlpha : 1;
-    if (fade <= 0) return;
-    const p = [0, 0, 0];
-    const q = [0, 0, 0];
-    const [Tx, Ty, Tz] = this.target;
-    if (!this.project(Tx, Ty, Tz, q) || q[2] <= 0) return;
-    const ex = q[0];
-    const ey = q[1];
-    const steps = 40;
-    ctx.lineCap = 'round';
-    ctx.font = '600 9px ui-monospace, SFMono-Regular, Menlo, monospace';
+    const a = this.pin;
+    const age = this.time - this.arriveAt;
+    const drop = this.opts.reducedMotion ? 0 : (1 - easeOutBack(clamp01(age / 0.55))) * 26;
 
-    for (const arc of this.arcs) {
-      const t = (this.time - arc.start) / ARC_DURATION;
-      if (t < 0) continue;
-      if (!this.project(arc.from[0], arc.from[1], arc.from[2], p) || p[2] <= 0) continue;
-      const sx = p[0];
-      const sy = p[1];
-      // Bow the arc off the chord in screen space so it reads as a flight path at any zoom.
-      const dx = ex - sx;
-      const dy = ey - sy;
-      const len = Math.hypot(dx, dy) || 1;
-      const cx = (sx + ex) / 2 - (dy / len) * len * 0.32 * arc.bend;
-      const cy = (sy + ey) / 2 + (dx / len) * len * 0.32 * arc.bend - len * 0.12;
-      const at = (u: number, out: number[]) => {
-        const m = 1 - u;
-        out[0] = m * m * sx + 2 * m * u * cx + u * u * ex;
-        out[1] = m * m * sy + 2 * m * u * cy + u * u * ey;
-      };
-
-      // Source marker and tag.
-      const ma = clamp01(t * 3) * fade;
-      ctx.fillStyle = `rgba(160, 215, 255, ${0.9 * ma})`;
-      ctx.beginPath();
-      ctx.arc(sx, sy, 2.4, 0, TAU);
-      ctx.fill();
-      if (t < 1) {
-        ctx.strokeStyle = `rgba(160, 215, 255, ${0.5 * ma * (1 - t)})`;
-        ctx.lineWidth = 1;
+    if (!this.opts.reducedMotion) {
+      for (let i = 0; i < 2; i++) {
+        const t = ((age + i * 1.1) % 2.2) / 2.2;
+        ctx.strokeStyle = `rgba(${WARM}, ${0.45 * (1 - t) * a})`;
+        ctx.lineWidth = 1.4;
         ctx.beginPath();
-        ctx.arc(sx, sy, 3 + 14 * t, 0, TAU);
+        ctx.arc(x, y, 6 + easeOutCubic(t) * 40, 0, TAU);
         ctx.stroke();
       }
-      const tw = ctx.measureText(arc.tag).width;
-      const lx = sx + (dx > 0 ? -tw - 19 : 7);
-      ctx.fillStyle = `rgba(8, 20, 44, ${0.8 * ma})`;
-      ctx.fillRect(lx, sy - 8, tw + 10, 15);
-      ctx.strokeStyle = `rgba(130, 190, 255, ${0.45 * ma})`;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(lx + 0.5, sy - 7.5, tw + 9, 14);
-      ctx.fillStyle = `rgba(190, 225, 255, ${ma})`;
-      ctx.fillText(arc.tag, lx + 5, sy + 3);
-
-      // Trail, brighter toward the head; settles into a faint path once it lands.
-      const head = easeInOutCubic(clamp01(t));
-      const tail = t < 1 ? Math.max(0, head - 0.5) : 0;
-      const settled = t >= 1 ? Math.max(0.3, 1 - (t - 1) * 0.5) : 1;
-      at(tail, q);
-      for (let i = 1; i <= steps; i++) {
-        const u = tail + ((head - tail) * i) / steps;
-        at(u, p);
-        const rel = i / steps;
-        const a = (t < 1 ? rel * rel : settled * 0.55) * fade;
-        ctx.strokeStyle = `rgba(255, ${Math.round(190 + 50 * rel)}, ${Math.round(110 + 110 * rel)}, ${a})`;
-        ctx.lineWidth = t < 1 ? 0.8 + 1.8 * rel : 1.1;
-        ctx.beginPath();
-        ctx.moveTo(q[0], q[1]);
-        ctx.lineTo(p[0], p[1]);
-        ctx.stroke();
-        q[0] = p[0];
-        q[1] = p[1];
-      }
-
-      if (t < 1) {
-        at(head, p);
-        const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 10);
-        g.addColorStop(0, `rgba(255, 245, 220, ${fade})`);
-        g.addColorStop(1, 'rgba(255, 200, 120, 0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p[0], p[1], 10, 0, TAU);
-        ctx.fill();
-      }
-    }
-  }
-
-  private drawPin() {
-    if (this.pinAlpha <= 0) return;
-    const { ctx } = this;
-    const p = [0, 0, 0];
-    const [x0, y0, z0] = this.target;
-    if (!this.project(x0, y0, z0, p) || p[2] <= 0) return;
-    const [x, y] = p;
-    const a = this.pinAlpha;
-    const age = this.time - this.lockAt;
-
-    // Expanding rings (a single still ring when motion is reduced).
-    if (this.opts.reducedMotion) {
-      ctx.strokeStyle = `rgba(255, 190, 100, ${0.5 * a})`;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.arc(x, y, 18, 0, TAU);
-      ctx.stroke();
-    }
-    for (let i = 0; i < 3 && !this.opts.reducedMotion; i++) {
-      const t = ((age + i * 0.8) % 2.4) / 2.4;
-      ctx.strokeStyle = `rgba(255, 190, 100, ${0.55 * (1 - t) * a})`;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.arc(x, y, 6 + easeOutCubic(t) * 54, 0, TAU);
-      ctx.stroke();
     }
 
-    // Light beam.
-    const beamH = 86 * easeOutCubic(clamp01(age / 0.6));
-    const beam = ctx.createLinearGradient(x, y, x, y - beamH);
-    beam.addColorStop(0, `rgba(255, 210, 140, ${0.9 * a})`);
-    beam.addColorStop(1, 'rgba(255, 210, 140, 0)');
-    ctx.strokeStyle = beam;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x, y - beamH);
-    ctx.stroke();
-    ctx.globalAlpha = 0.25;
-    ctx.lineWidth = 9;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
-    glow.addColorStop(0, `rgba(255, 190, 100, ${0.55 * a})`);
-    glow.addColorStop(1, 'rgba(255, 190, 100, 0)');
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, 22);
+    glow.addColorStop(0, `rgba(${WARM_SOFT}, ${0.45 * a})`);
+    glow.addColorStop(1, `rgba(${WARM_SOFT}, 0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(x, y, 30, 0, TAU);
+    ctx.arc(x, y, 22, 0, TAU);
     ctx.fill();
 
+    // Marker head drops in with a small bounce.
+    const hy = y - drop;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.shadowColor = 'rgba(124, 45, 18, 0.35)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = `rgb(${WARM})`;
+    ctx.beginPath();
+    ctx.arc(x, hy, 7, 0, TAU);
+    ctx.fill();
+    ctx.restore();
     ctx.fillStyle = `rgba(255, 255, 255, ${a})`;
     ctx.beginPath();
-    ctx.arc(x, y, 3.6, 0, TAU);
+    ctx.arc(x, hy, 2.8, 0, TAU);
     ctx.fill();
-    ctx.strokeStyle = `rgba(255, 200, 120, ${a})`;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x, y, 7, 0, TAU);
-    ctx.stroke();
-
-    // Lock-on reticle that snaps in, then fades.
-    const lt = clamp01(age / 0.55);
-    const ra = this.opts.reducedMotion ? 0 : (1 - clamp01((age - 0.9) / 0.6)) * a;
-    if (ra > 0) {
-      const size = lerp(64, 17, easeOutCubic(lt));
-      const len = size * 0.45;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate((1 - easeOutCubic(lt)) * 0.8);
-      ctx.strokeStyle = `rgba(255, 230, 190, ${ra})`;
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      for (let q = 0; q < 4; q++) {
-        ctx.rotate(Math.PI / 2);
-        ctx.moveTo(-size, -size + len);
-        ctx.lineTo(-size, -size);
-        ctx.lineTo(-size + len, -size);
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
   }
 
-  private drawConnector() {
-    if (this.phase !== 'reveal' && this.phase !== 'ready') return;
-    const card = this.opts.getCard();
-    if (!card || this.pinAlpha <= 0) return;
+  private updateOverlays(pinVisible: boolean, pinX: number, pinY: number) {
+    const anchor = this.opts.anchor;
+    if (anchor) {
+      anchor.style.transform = `translate3d(${pinX.toFixed(1)}px, ${pinY.toFixed(1)}px, 0)`;
+      anchor.style.visibility = pinVisible ? 'visible' : 'hidden';
+    }
     const p = [0, 0, 0];
-    const [x0, y0, z0] = this.target;
-    if (!this.project(x0, y0, z0, p) || p[2] <= 0) return;
-
-    const cr = card.getBoundingClientRect();
-    const vr = this.opts.canvas.getBoundingClientRect();
-    const ax = this.wide ? cr.left - vr.left : cr.left - vr.left + cr.width / 2;
-    const ay = this.wide ? cr.top - vr.top + 48 : cr.top - vr.top;
-    const a = clamp01((this.time - this.lockAt - LOCK_TIME - 0.15) / 0.5) * this.pinAlpha;
-    const { ctx } = this;
-    const sx = p[0];
-    const sy = p[1];
-    const cx = this.wide ? sx + (ax - sx) * 0.55 : sx;
-    const cy = this.wide ? sy : sy + (ay - sy) * 0.55;
-
-    const grad = ctx.createLinearGradient(sx, sy, ax, ay);
-    grad.addColorStop(0, `rgba(255, 200, 120, ${0.85 * a})`);
-    grad.addColorStop(1, `rgba(170, 210, 255, ${0.6 * a})`);
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([3, 5]);
-    ctx.lineDashOffset = -this.time * 28;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo(cx, cy, ax, ay);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = `rgba(200, 225, 255, ${a})`;
-    ctx.beginPath();
-    ctx.arc(ax, ay, 2.6, 0, TAU);
-    ctx.fill();
-  }
-
-  private updateOverlays() {
-    const chip = this.opts.chip;
-    if (chip) {
-      const p = [0, 0, 0];
-      const [x0, y0, z0] = this.target;
-      const visible = this.project(x0, y0, z0, p) && p[2] > 0;
-      const beamH = 86 * easeOutCubic(clamp01((this.time - this.lockAt) / 0.6));
-      chip.style.transform = `translate3d(${p[0].toFixed(1)}px, ${(p[1] - beamH - 6).toFixed(1)}px, 0)`;
-      chip.style.opacity = visible ? String(this.pinAlpha) : '0';
-    }
-    const coords = this.opts.coords;
-    if (coords && this.time - this.lastHud > 0.08) {
-      this.lastHud = this.time;
-      const lng = ((((this.cLng + 180) % 360) + 360) % 360) - 180;
-      coords.textContent = `${Math.abs(this.cLat).toFixed(2)}°${this.cLat >= 0 ? 'N' : 'S'}  ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? 'E' : 'W'}  ·  ${this.scale.toFixed(1)}×`;
-    }
+    this.opts.tags.forEach((el, i) => {
+      if (!el) return;
+      const t = this.tags[i];
+      const age = t ? (this.time - t.born) / TAG_LIFE : 1;
+      if (!t || age >= 1) {
+        el.style.opacity = '0';
+        return;
+      }
+      const v = this.hubs[t.hub];
+      const visible = this.project(v[0], v[1], v[2], p) && p[2] > 0.1;
+      const fade = Math.min(1, age / 0.12, (1 - age) / 0.18);
+      const rise = (1 - easeOutCubic(Math.min(1, age / 0.15))) * 6;
+      el.style.transform = `translate3d(${p[0].toFixed(1)}px, ${(p[1] - 10 + rise).toFixed(1)}px, 0)`;
+      el.style.opacity = visible ? String(Math.max(0, fade)) : '0';
+    });
   }
 }

@@ -32,10 +32,10 @@ export default function FAQ() {
     <section id="faq" className="scroll-mt-20 py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:px-8">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-electric-500">FAQ</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-navy-900 sm:text-5xl">Questions teams ask first.</h2>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">FAQ</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Questions teams ask first.</h2>
           <p className="mt-4 text-lg text-gray-500">
-            Anything else? <a href="#contact" className="font-medium text-electric-500 hover:underline">Get in touch</a>.
+            Anything else? <a href="#contact" className="font-medium text-indigo-600 hover:underline">Get in touch</a>.
           </p>
         </div>
 
@@ -50,8 +50,8 @@ export default function FAQ() {
                   className="flex w-full items-center justify-between gap-6 py-5 text-left"
                   aria-expanded={isOpen}
                 >
-                  <span className="text-lg font-semibold text-navy-900">{f.q}</span>
-                  <Plus className={`h-5 w-5 shrink-0 text-electric-500 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`} />
+                  <span className="text-lg font-semibold text-slate-900">{f.q}</span>
+                  <Plus className={`h-5 w-5 shrink-0 text-indigo-600 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`} />
                 </button>
                 <AnimatePresence initial={false}>
                   {isOpen && (

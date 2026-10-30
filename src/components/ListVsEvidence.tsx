@@ -27,8 +27,8 @@ export default function ListVsEvidence() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-electric-500">Why {brand.name}</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-navy-900 sm:text-5xl">Not another list of logos.</h2>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">Why {brand.name}</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Not another list of logos.</h2>
           <p className="mt-4 text-lg text-gray-500">
             Most lead lists tell you who exists. We tell you who is ready to buy, and show you the proof.
           </p>
@@ -70,32 +70,32 @@ export default function ListVsEvidence() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="relative flex flex-col overflow-hidden rounded-3xl bg-navy-950 p-6 text-white shadow-2xl shadow-navy-900/20 sm:p-8"
+            className="relative flex flex-col overflow-hidden rounded-3xl bg-white p-6 shadow-[0_30px_70px_-30px_rgba(79,70,229,0.45)] ring-1 ring-indigo-100 sm:p-8"
           >
-            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-electric-500/30 blur-3xl" />
-            <div className="relative flex items-center gap-2 text-sm font-semibold text-amber-200">
+            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl" />
+            <div className="relative flex items-center gap-2 text-sm font-semibold text-indigo-600">
               <CheckCircle2 className="h-4 w-4" />
               A {brand.name} account
             </div>
 
-            <div className="relative mt-6 flex-1 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="relative mt-6 flex-1 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/60 to-white p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-lg font-semibold">Brightline Health Partners</div>
-                  <div className="text-sm text-sky-100/55">Healthcare network · 7,200 employees · Austin, TX</div>
+                  <div className="text-lg font-semibold text-slate-900">Regional healthcare network</div>
+                  <div className="text-sm text-slate-500">7,200 employees · Austin, TX</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-amber-200">96</div>
-                  <div className="text-[10px] font-semibold tracking-[0.14em] text-sky-100/50">INTENT</div>
+                  <div className="text-2xl font-bold text-orange-500">High</div>
+                  <div className="text-[10px] font-semibold tracking-[0.14em] text-slate-400">INTENT</div>
                 </div>
               </div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-indigo-100">
                 <motion.div
                   initial={{ width: 0 }}
-                  whileInView={{ width: '96%' }}
+                  whileInView={{ width: '90%' }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-500"
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-orange-400"
                 />
               </div>
 
@@ -107,15 +107,15 @@ export default function ListVsEvidence() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: 0.4 + i * 0.12 }}
-                    className="flex items-start gap-3 rounded-xl bg-white/[0.04] px-3 py-2.5"
+                    className="flex items-start gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2.5"
                   >
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-300/10 text-amber-200">
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-500">
                       <Icon className="h-3.5 w-3.5" />
                     </span>
                     <div className="min-w-0">
-                      <div className="text-[11px] font-medium uppercase tracking-wider text-sky-100/50">{label}</div>
-                      <div className="text-sm text-white/90">{text}</div>
-                      <div className="flex items-center gap-1 text-xs text-sky-100/40">
+                      <div className="text-[11px] font-semibold text-orange-600">{label}</div>
+                      <div className="text-sm text-slate-800">{text}</div>
+                      <div className="flex items-center gap-1 text-xs text-slate-400">
                         <Link2 className="h-3 w-3" />
                         {source}
                       </div>
@@ -125,20 +125,20 @@ export default function ListVsEvidence() {
               </ul>
 
               <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                <div className="rounded-xl border border-amber-300/20 bg-amber-300/[0.07] px-3 py-2.5">
-                  <div className="text-[10px] font-semibold tracking-[0.16em] text-amber-200/80">WHY NOW</div>
-                  <div className="mt-0.5 text-sm text-amber-50/90">Fresh capital and a new revenue leader with budget.</div>
+                <div className="rounded-xl border border-orange-100 bg-orange-50/70 px-3 py-2.5">
+                  <div className="text-[10px] font-semibold tracking-[0.16em] text-orange-600">WHY NOW</div>
+                  <div className="mt-0.5 text-sm text-slate-800">Fresh capital and a new revenue leader with budget.</div>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
-                  <div className="text-[10px] font-semibold tracking-[0.16em] text-sky-100/50">NEXT STEP</div>
-                  <div className="mt-0.5 flex items-center gap-1.5 text-sm text-white/90">
-                    <Send className="h-3.5 w-3.5 text-amber-200" />
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2.5">
+                  <div className="text-[10px] font-semibold tracking-[0.16em] text-indigo-600">NEXT STEP</div>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-800">
+                    <Send className="h-3.5 w-3.5 text-indigo-600" />
                     Email to the new VP, drafted
                   </div>
                 </div>
               </div>
             </div>
-            <p className="relative mt-5 text-sm text-sky-100/60">Every claim links back to its source. Your reps open with a reason.</p>
+            <p className="relative mt-5 text-sm text-slate-500">Every claim links back to its source. Your reps open with a reason.</p>
           </motion.div>
         </div>
       </div>
