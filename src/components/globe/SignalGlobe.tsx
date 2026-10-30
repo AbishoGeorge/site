@@ -30,10 +30,6 @@ const kindIcon: Record<SignalKind, LucideIcon> = {
   earnings: Mic,
 };
 
-// Evidence rows land in the card as the matching arc reaches the pin (see GlobeEngine timings).
-const ROW_DELAY = 0.85;
-const ROW_STAGGER = 0.35;
-
 function statusText(phase: GlobePhase, s: AccountSignal | undefined) {
   if (!s || phase === 'intro') return 'Initializing signal scan';
   switch (phase) {
@@ -54,6 +50,8 @@ export default function SignalGlobe() {
   const coordsRef = useRef<HTMLSpanElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [{ phase, index }, setView] = useState<{ phase: GlobePhase; index: number }>({ phase: 'intro', index: -1 });
+  // Evidence rows fill in as the engine reports each arc reaching the pin.
+  const [landed, setLanded] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,6 +60,7 @@ export default function SignalGlobe() {
       canvas,
       signals: accountSignals,
       onPhase: (p, i) => setView({ phase: p, index: i }),
+      onEvidence: setLanded,
       getCard: () => cardRef.current,
       chip: chipRef.current,
       coords: coordsRef.current,
@@ -81,10 +80,14 @@ export default function SignalGlobe() {
 
   return (
     <div className="absolute inset-0">
+      <p className="sr-only">
+        Animated example: a globe turns and zooms into one country at a time, highlights an example account there, and
+        shows the buying signals that make it worth contacting.
+      </p>
       <canvas ref={canvasRef} className="absolute inset-0 block" aria-hidden="true" />
 
       {/* HUD */}
-      <div className="pointer-events-none absolute inset-x-4 top-4 flex items-start justify-between gap-3 sm:inset-x-6 sm:top-6 xl:left-[54%] xl:right-8">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-4 top-4 flex items-start justify-between gap-3 sm:inset-x-6 sm:top-6 xl:left-[54%] xl:right-8">
         <div className="hidden sm:block font-mono text-[10px] leading-relaxed tracking-[0.18em] text-sky-200/60">
           <div className="flex items-center gap-2 text-sky-100/80">
             <span className="relative flex h-1.5 w-1.5">
@@ -137,10 +140,10 @@ export default function SignalGlobe() {
       </div>
 
       {/* Account card */}
-      <div className="absolute inset-x-3 bottom-3 sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:w-[400px] sm:-translate-x-1/2 xl:bottom-auto xl:left-auto xl:right-[3.5%] xl:top-[18%] xl:w-[360px] xl:translate-x-0">
+      <div aria-hidden="true" className="absolute inset-x-3 bottom-3 sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:w-[400px] sm:-translate-x-1/2 xl:bottom-auto xl:left-auto xl:right-[3.5%] xl:top-[18%] xl:w-[360px] xl:translate-x-0">
         <AnimatePresence mode="wait">
           {showCard && signal && (
-            <SignalCard key={signal.id} ref={cardRef} signal={signal} ready={phase === 'ready'} />
+            <SignalCard key={signal.id} ref={cardRef} signal={signal} ready={phase === 'ready'} arrived={landed} />
           )}
         </AnimatePresence>
       </div>
@@ -152,18 +155,11 @@ export default function SignalGlobe() {
 interface SignalCardProps {
   signal: AccountSignal;
   ready: boolean;
+  /** Evidence rows whose arc has reached the pin. */
+  arrived: number;
 }
 
-const SignalCard = forwardRef<HTMLDivElement, SignalCardProps>(function SignalCard({ signal, ready }, ref) {
-  const [arrived, setArrived] = useState(0);
-
-  useEffect(() => {
-    const timers = signal.evidence.map((_, i) =>
-      window.setTimeout(() => setArrived(i + 1), (ROW_DELAY + ROW_STAGGER * i) * 1000)
-    );
-    return () => timers.forEach(window.clearTimeout);
-  }, [signal]);
-
+const SignalCard = forwardRef<HTMLDivElement, SignalCardProps>(function SignalCard({ signal, ready, arrived }, ref) {
   return (
     <motion.div
       ref={ref}

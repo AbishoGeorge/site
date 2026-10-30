@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Mail } from 'lucide-react';
-import { brand } from '../brand';
+import { brand, demoLinkProps } from '../brand';
 
 export default function FinalCTA() {
   return (
@@ -23,7 +23,8 @@ export default function FinalCTA() {
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href={brand.demoUrl}
+              href={brand.demoUrl || `mailto:${brand.email}?subject=Demo%20request`}
+              {...demoLinkProps}
               className="group inline-flex items-center gap-4 rounded-full bg-white py-1.5 pl-6 pr-1.5 font-semibold text-navy-900 transition-transform hover:-translate-y-0.5"
             >
               Book a demo

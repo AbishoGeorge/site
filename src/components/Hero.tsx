@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowUpRight, Clock3, FileSearch, PenLine } from 'lucide-react';
 import SignalGlobe from './globe/SignalGlobe';
 import { signalKindLabel, signalTicker } from './globe/signals';
-import { brand } from '../brand';
+import { brand, demoHref, demoLinkProps } from '../brand';
 
 const proofPoints = [
   { icon: FileSearch, label: 'Evidence on every account' },
@@ -18,7 +18,7 @@ const fadeUp = (delay: number) => ({
 
 export default function Hero() {
   return (
-    <section id="top" className="px-2 pt-2 sm:px-4 sm:pt-4">
+    <section id="top" className="scroll-mt-16 px-2 pt-2 sm:px-4 sm:pt-4">
       <div className="relative mx-auto flex max-w-[1600px] flex-col overflow-hidden rounded-[28px] bg-[#050b18] ring-1 ring-white/10 xl:block xl:h-[clamp(700px,calc(100svh-96px),860px)]">
         {/* Ambient light */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_72%_45%,rgba(27,95,170,0.35),transparent_70%)]" />
@@ -58,7 +58,8 @@ export default function Hero() {
 
           <motion.div {...fadeUp(0.24)} className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
-              href="#contact"
+              href={demoHref}
+              {...demoLinkProps}
               className="group inline-flex items-center justify-between gap-4 rounded-full bg-white py-1.5 pl-6 pr-1.5 font-semibold text-navy-900 shadow-[0_10px_40px_-10px_rgba(255,200,120,0.5)] transition-transform hover:-translate-y-0.5"
             >
               Book a demo

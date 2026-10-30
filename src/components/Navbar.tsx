@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
-import { brand } from '../brand';
+import { brand, demoHref, demoLinkProps } from '../brand';
 import Logo from './Logo';
 
 const links = [
@@ -46,7 +46,8 @@ export default function Navbar() {
         </div>
 
         <a
-          href="#contact"
+          href={demoHref}
+          {...demoLinkProps}
           className="hidden rounded-full bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-800 md:inline-flex"
         >
           Book a demo
@@ -83,7 +84,8 @@ export default function Navbar() {
                 </a>
               ))}
               <a
-                href="#contact"
+                href={demoHref}
+                {...demoLinkProps}
                 onClick={() => setOpen(false)}
                 className="mt-2 block rounded-full bg-navy-900 px-4 py-2.5 text-center text-sm font-semibold text-white"
               >

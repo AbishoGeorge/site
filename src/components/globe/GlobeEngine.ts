@@ -11,6 +11,8 @@ export interface GlobeEngineOptions {
   canvas: HTMLCanvasElement;
   signals: AccountSignal[];
   onPhase: (phase: GlobePhase, index: number) => void;
+  /** Number of evidence arcs that have reached the pin for the current account. */
+  onEvidence: (landed: number) => void;
   /** Card element the connector line runs to while an account is open. */
   getCard: () => HTMLElement | null;
   /** City label that follows the pin; positioned by the engine every frame. */
@@ -150,6 +152,8 @@ export class GlobeEngine {
   private disposed = false;
   private resizeObserver: ResizeObserver;
   private wideQuery: MediaQueryList;
+  private dprQuery: MediaQueryList | null = null;
+  private landed = 0;
 
   constructor(opts: GlobeEngineOptions) {
     this.opts = opts;
@@ -158,9 +162,24 @@ export class GlobeEngine {
     this.wideQuery = window.matchMedia('(min-width: 1280px)');
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(opts.canvas.parentElement ?? opts.canvas);
+    this.watchDpr();
     this.resize();
-    this.load();
+    this.load().catch(() => {
+      // One retry for a flaky network or a chunk that changed mid-deploy; the starfield stays up meanwhile.
+      window.setTimeout(() => {
+        if (!this.disposed) this.load().catch(() => undefined);
+      }, 2000);
+    });
   }
+
+  /** Re-render at the new density when the window moves to a screen with a different pixel ratio. */
+  private watchDpr = () => {
+    this.dprQuery?.removeEventListener('change', this.watchDpr);
+    if (this.disposed) return;
+    this.dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    this.dprQuery.addEventListener('change', this.watchDpr);
+    if (this.W) this.resize();
+  };
 
   private async load() {
     const world = (await import('world-atlas/countries-110m.json')).default as unknown as Topology<{
@@ -229,23 +248,26 @@ export class GlobeEngine {
     this.dCountry = Int16Array.from(cs);
     this.dLevel = Uint8Array.from(ls);
     this.buckets = Array.from({ length: 10 }, () => new Float32Array(this.n * 2));
-    this.hlXY = new Float32Array(this.n * 3);
+    this.hlXY = new Float32Array(this.n * 4);
   }
 
   private resize() {
     const parent = this.opts.canvas.parentElement ?? this.opts.canvas;
     const W = parent.clientWidth;
     const H = parent.clientHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const wide = this.wideQuery.matches;
     if (!W || !H) return;
+    if (W === this.W && H === this.H && dpr === this.dpr && wide === this.wide) return;
     this.W = W;
     this.H = H;
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = dpr;
     const c = this.opts.canvas;
     c.width = Math.round(W * this.dpr);
     c.height = Math.round(H * this.dpr);
     c.style.width = `${W}px`;
     c.style.height = `${H}px`;
-    this.wide = this.wideQuery.matches;
+    this.wide = wide;
 
     if (this.wide) {
       this.baseX = W * 0.71;
@@ -268,7 +290,8 @@ export class GlobeEngine {
       r: Math.random() < 0.85 ? 0.6 : 1.1,
       phase: Math.random() * TAU,
     }));
-    if (!this.running) this.draw();
+    // Resizing the backing store clears it, so repaint now rather than leave a blank frame.
+    this.draw();
   }
 
   start() {
@@ -295,6 +318,7 @@ export class GlobeEngine {
     this.disposed = true;
     this.stop();
     this.resizeObserver.disconnect();
+    this.dprQuery?.removeEventListener('change', this.watchDpr);
   }
 
   private setPhase(phase: GlobePhase) {
@@ -319,8 +343,8 @@ export class GlobeEngine {
       lat1: s.lat,
       s0: this.scale,
       s1: s.zoom,
-      dip: Math.max(0, mid - 0.95),
-      dur: 2.6 + 1.0 * clamp01(dist / 140),
+      dip: this.opts.reducedMotion ? 0 : Math.max(0, mid - 0.95),
+      dur: this.opts.reducedMotion ? 1.4 : 2.6 + 1.0 * clamp01(dist / 140),
     };
     this.target = toVec(s.lat, s.lng);
     this.arcs = [];
@@ -359,7 +383,9 @@ export class GlobeEngine {
         const e = easeInOutCubic(t);
         this.cLng = lerp(f.lng0, f.lng1, e);
         this.cLat = lerp(f.lat0, f.lat1, e);
-        this.scale = lerp(f.s0, f.s1, e) - f.dip * Math.pow(Math.sin(Math.PI * t), 0.6);
+        const dipped = lerp(f.s0, f.s1, e) - f.dip * Math.pow(Math.sin(Math.PI * t), 0.6);
+        // The dip curve and the eased zoom peak at different times, so floor it at the whole-globe view.
+        this.scale = f.dip > 0 ? Math.max(Math.min(0.95, f.s0, f.s1), dipped) : dipped;
         if (t >= 1) {
           this.hlCountry = this.countryIndexByName.get(this.opts.signals[this.index].country) ?? -1;
           this.lockAt = this.time;
@@ -397,6 +423,14 @@ export class GlobeEngine {
     this.hl = clamp01(this.hl + (showing ? dt / 0.6 : -dt / 0.45));
     this.pinAlpha = clamp01(this.pinAlpha + (showing ? dt / 0.3 : -dt / 0.35));
     if (this.hl === 0 && !showing) this.hlCountry = -1;
+
+    // The card's evidence rows fill in as arcs land, on the engine's clock so they pause with it.
+    let landed = 0;
+    for (const arc of this.arcs) if (this.time - arc.start >= ARC_DURATION) landed++;
+    if (landed !== this.landed) {
+      this.landed = landed;
+      this.opts.onEvidence(landed);
+    }
 
     // Ambient activity: brief blips on random land dots.
     if (!this.opts.reducedMotion && this.time > this.nextBlip && this.n) {
@@ -544,7 +578,7 @@ export class GlobeEngine {
     this.hlCount = 0;
 
     const hlOn = this.hl > 0 && this.hlCountry >= 0;
-    const rippleOn = this.pinAlpha > 0;
+    const rippleOn = this.pinAlpha > 0 && !this.opts.reducedMotion;
     const [Tx, Ty, Tz] = this.target;
     const rippleAge = this.time - this.lockAt;
     const rippleR = (rippleAge % 2.4) * 7; // degrees
@@ -578,10 +612,11 @@ export class GlobeEngine {
         }
       }
       if (boost > 0.02) {
-        const o = this.hlCount * 3;
+        const o = this.hlCount * 4;
         this.hlXY[o] = sx;
         this.hlXY[o + 1] = sy;
-        this.hlXY[o + 2] = boost * levelAlpha[level];
+        this.hlXY[o + 2] = boost;
+        this.hlXY[o + 3] = level;
         this.hlCount++;
         continue;
       }
@@ -593,12 +628,11 @@ export class GlobeEngine {
     }
 
     const alphas = [0.16, 0.28, 0.42, 0.6, 0.78];
-    let baseSize = 1;
     for (let b = 0; b < 10; b++) {
       if (!count[b]) continue;
       const level = b < 5 ? 0 : 1;
       const spacing = R * DOT_STEPS[level] * DEG;
-      baseSize = Math.max(1, spacing * 0.3);
+      const baseSize = Math.max(1, spacing * 0.3);
       const round = baseSize > 2;
       const size = baseSize * (0.6 + 0.1 * (b % 5));
       const half = size / 2;
@@ -617,14 +651,16 @@ export class GlobeEngine {
     }
 
     // Highlighted dots (target country and the ripple), drawn individually for per-dot glow.
-    baseSize = Math.max(1, R * DOT_STEPS[fine > 0.5 ? 1 : 0] * DEG * 0.3);
+    // They follow the same coarse/fine crossfade as the rest of the land.
     for (let j = 0; j < this.hlCount; j++) {
-      const o = j * 3;
+      const o = j * 4;
       const x = this.hlXY[o];
       const y = this.hlXY[o + 1];
       const a = Math.min(1, this.hlXY[o + 2]);
-      const size = baseSize * (0.95 + 0.5 * a);
-      ctx.fillStyle = `rgba(255, ${Math.round(200 + 40 * a)}, ${Math.round(120 + 100 * a)}, ${0.45 + 0.55 * a})`;
+      const level = this.hlXY[o + 3];
+      const size = Math.max(1, R * DOT_STEPS[level] * DEG * 0.3) * (0.95 + 0.5 * a);
+      const alpha = (0.45 + 0.55 * a) * levelAlpha[level];
+      ctx.fillStyle = `rgba(255, ${Math.round(200 + 40 * a)}, ${Math.round(120 + 100 * a)}, ${alpha})`;
       ctx.beginPath();
       ctx.arc(x, y, size / 2, 0, TAU);
       ctx.fill();
@@ -774,8 +810,15 @@ export class GlobeEngine {
     const a = this.pinAlpha;
     const age = this.time - this.lockAt;
 
-    // Expanding rings.
-    for (let i = 0; i < 3; i++) {
+    // Expanding rings (a single still ring when motion is reduced).
+    if (this.opts.reducedMotion) {
+      ctx.strokeStyle = `rgba(255, 190, 100, ${0.5 * a})`;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(x, y, 18, 0, TAU);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 3 && !this.opts.reducedMotion; i++) {
       const t = ((age + i * 0.8) % 2.4) / 2.4;
       ctx.strokeStyle = `rgba(255, 190, 100, ${0.55 * (1 - t) * a})`;
       ctx.lineWidth = 1.4;
@@ -820,7 +863,7 @@ export class GlobeEngine {
 
     // Lock-on reticle that snaps in, then fades.
     const lt = clamp01(age / 0.55);
-    const ra = (1 - clamp01((age - 0.9) / 0.6)) * a;
+    const ra = this.opts.reducedMotion ? 0 : (1 - clamp01((age - 0.9) / 0.6)) * a;
     if (ra > 0) {
       const size = lerp(64, 17, easeOutCubic(lt));
       const len = size * 0.45;

@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ListVsEvidence from './components/ListVsEvidence';
@@ -9,7 +10,7 @@ import Footer from './components/Footer';
 
 export default function App() {
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <Navbar />
       <main className="pt-16">
         <Hero />
@@ -20,6 +21,6 @@ export default function App() {
         <FinalCTA />
       </main>
       <Footer />
-    </>
+    </MotionConfig>
   );
 }

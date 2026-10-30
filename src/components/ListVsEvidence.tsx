@@ -48,14 +48,14 @@ export default function ListVsEvidence() {
               A typical lead list
             </div>
             <div className="mt-6 flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-              <div className="grid grid-cols-[1.2fr_1.6fr_0.8fr] gap-3 border-b border-gray-100 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                <span>Account</span>
-                <span>Firmographics</span>
-                <span>Why now?</span>
+              <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1.6fr)_minmax(0,0.8fr)] gap-3 border-b border-gray-100 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                <span className="truncate">Account</span>
+                <span className="truncate">Firmographics</span>
+                <span className="truncate">Why now?</span>
               </div>
               {vagueRows.map((row) => (
-                <div key={row.name} className="grid grid-cols-[1.2fr_1.6fr_0.8fr] items-center gap-3 border-b border-gray-50 px-4 py-3.5 text-sm last:border-0">
-                  <span className="font-medium text-gray-400">{row.name}</span>
+                <div key={row.name} className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1.6fr)_minmax(0,0.8fr)] items-center gap-3 border-b border-gray-50 px-4 py-3.5 text-sm last:border-0">
+                  <span className="truncate font-medium text-gray-400">{row.name}</span>
                   <span className="truncate text-gray-400">{row.meta}</span>
                   <span className="text-gray-300">—</span>
                 </div>
