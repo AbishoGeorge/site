@@ -1,0 +1,66 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        navy: {
+          50: '#ebeef3',
+          100: '#c8cdd9',
+          200: '#a1aabe',
+          300: '#7a87a3',
+          400: '#5d6d90',
+          500: '#2e4a7a',
+          600: '#263f6b',
+          700: '#1c3259',
+          800: '#142647',
+          900: '#0B1A32',
+          950: '#060f1f',
+        },
+        electric: {
+          50: '#e8f0fa',
+          100: '#c5d9f2',
+          200: '#9ebfe8',
+          300: '#76a5de',
+          400: '#5891d6',
+          500: '#1B5FAA',
+          600: '#17539a',
+          700: '#124585',
+          800: '#0d3870',
+          900: '#062550',
+        },
+        'brand-red': {
+          50: '#fef2f2',
+          100: '#fee2e2',
+          200: '#fecaca',
+          300: '#fca5a5',
+          400: '#f87171',
+          500: '#C8292A',
+          600: '#b52324',
+          700: '#991b1c',
+          800: '#7f1718',
+          900: '#5c1011',
+        },
+        amber: {
+          50: '#fdf5e6',
+          100: '#fae6c0',
+          200: '#f6d596',
+          300: '#f2c46c',
+          400: '#efb74d',
+          500: '#BA7517',
+          600: '#a86a14',
+          700: '#8f5b10',
+          800: '#764c0d',
+          900: '#503407',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+      },
+      borderRadius: {
+        '4xl': '2rem',
+      },
+    },
+  },
+  plugins: [],
+};
