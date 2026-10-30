@@ -5,16 +5,37 @@ import { brand, demoHref, demoLinkProps } from '../brand';
 import Logo from './Logo';
 
 const links = [
-  { href: '#why', label: 'Why us' },
   { href: '#what-you-get', label: 'What you get' },
   { href: '#how-it-works', label: 'How it works' },
   { href: '#signals', label: 'Signals' },
   { href: '#faq', label: 'FAQ' },
+  { href: '#top-accounts', label: 'See my top accounts' },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [current, setCurrent] = useState('');
+
+  // Highlight the link for the section in the middle of the screen.
+  useEffect(() => {
+    const sections = links
+      .map((l) => document.getElementById(l.href.slice(1)))
+      .filter((el): el is HTMLElement => !!el);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setCurrent(`#${e.target.id}`);
+      },
+      { rootMargin: '-45% 0px -50% 0px' }
+    );
+    sections.forEach((el) => io.observe(el));
+    const onTop = () => window.scrollY < 200 && setCurrent('');
+    window.addEventListener('scroll', onTop, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener('scroll', onTop);
+    };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -41,7 +62,10 @@ export default function Navbar() {
             <a
               key={l.href}
               href={l.href}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-indigo-50 hover:text-slate-900"
+              aria-current={current === l.href ? 'location' : undefined}
+              className={`rounded-full px-3.5 py-2 text-sm font-medium transition-colors hover:bg-indigo-50 hover:text-slate-900 ${
+                current === l.href ? 'bg-indigo-50 text-slate-900' : 'text-slate-600'
+              }`}
             >
               {l.label}
             </a>

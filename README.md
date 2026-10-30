@@ -16,3 +16,5 @@ npm run dev
 - **Brand name, email and demo link:** `src/brand.ts`. Also update the `<title>` and meta tags in `index.html`, and the logo in `src/components/Logo.tsx` and `public/favicon.svg`.
 - **Accounts shown on the globe and the ticker:** `src/components/globe/signals.ts`. The companies there are fictional examples. Each entry's `country` must match a name in `world-atlas/countries-110m.json`, and `zoom` sets how far the globe zooms in.
 - **Globe timing and look:** constants at the top of `src/components/globe/GlobeEngine.ts`.
+- **"See my top accounts" request form:** set `formEndpoint` in `src/brand.ts` to a form service URL that accepts a JSON POST (for example Formspree). Until it is set, submitting opens the visitor's email app with their details, addressed to `email`. The example signal shown next to the form is in `src/components/accounts/RequestStep.tsx`.
+- **Company logo on the scan screen:** loaded from Google's public favicon service using the website the visitor typed, with a lettered tile as fallback.

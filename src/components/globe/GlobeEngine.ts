@@ -33,7 +33,14 @@ const TAG_LIFE = 2.6;
 // A flight pulls back to the whole globe, turns it, then dives in. Fractions of the flight time.
 const PULL_BACK = 0.32;
 const DIVE_IN = 0.36;
-const DOT_STEPS = [1.0, 0.6];
+/**
+ * Land dot grid spacing in degrees. The fine grid nests inside the coarse one (every coarse dot is also a
+ * fine dot), so zooming in only fades the in-between dots in: nothing shifts, so there is no moiré shimmer.
+ */
+const COARSE_STEP = 1.0;
+const FINE_STEP = COARSE_STEP / 2;
+/** Depth shading steps for the dot grid; more steps means no visible banding as the globe turns. */
+const DEPTH_LEVELS = 8;
 /** How far the atmosphere reaches, in globe radii. */
 const BASE_EXTENT = 1.28;
 const SPRITE_PX = 1024;
@@ -61,7 +68,20 @@ const smoothstep = (t: number) => {
   const c = clamp01(t);
   return c * c * (3 - 2 * c);
 };
-const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+/** Wrap an angle difference into [-180, 180). */
+const wrap180 = (d: number) => ((((d + 180) % 360) + 360) % 360) - 180;
+
+/** Critically damped spring toward a moving goal (Game Programming Gems 4, "SmoothDamp"). */
+function smoothDamp(current: number, goal: number, vel: { v: number }, smoothTime: number, dt: number) {
+  const omega = 2 / smoothTime;
+  const x = omega * dt;
+  const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const change = current - goal;
+  const temp = (vel.v + omega * change) * dt;
+  vel.v = (vel.v - omega * temp) * exp;
+  return goal + (change + temp) * exp;
+}
 
 function toVec(lat: number, lng: number): [number, number, number] {
   const p = lat * DEG;
@@ -103,6 +123,14 @@ export class GlobeEngine {
   private cLng = -20;
   private cLat = 24;
   private scale = 1;
+  // Where the timeline wants the camera; the camera follows through springs so it never jerks.
+  private gLng = -20;
+  private gLat = 24;
+  private gScale = 1;
+  private vLng = { v: 0 };
+  private vLat = { v: 0 };
+  private vScale = { v: 0 };
+  private driftV = 0;
   private R = 1;
   private tx = 0;
   private ty = 0;
@@ -122,7 +150,7 @@ export class GlobeEngine {
   private dCountry = new Int16Array(0);
   private dLevel = new Uint8Array(0);
   private buckets: Float32Array[] = [];
-  private bucketCount = new Int32Array(10);
+  private bucketCount = new Int32Array(DEPTH_LEVELS * 2);
   private warmXY = new Float32Array(0);
   private warmCount = 0;
 
@@ -174,7 +202,9 @@ export class GlobeEngine {
   });
   private borders: MultiLineString | null = null;
   private graticule = geoGraticule10();
-  private projection: GeoProjection = geoOrthographic().clipAngle(90).precision(1.2);
+  // Adaptive resampling picks different points each frame, which makes coastlines quiver while the globe
+  // turns; the 110m outlines are dense enough to draw as-is.
+  private projection: GeoProjection = geoOrthographic().clipAngle(90).precision(0);
   private path: GeoPath<unknown, GeoPermissibleObjects>;
   private countryIndexByName = new Map<string, number>();
   private hubs = hubCities.map(([lat, lng]) => toVec(lat, lng));
@@ -285,33 +315,37 @@ export class GlobeEngine {
     const zs: number[] = [];
     const cs: number[] = [];
     const ls: number[] = [];
-    DOT_STEPS.forEach((step, level) => {
-      let row = 0;
-      for (let lat = -56; lat <= 80; lat += step, row++) {
-        const count = Math.max(1, Math.floor((360 * Math.cos(lat * DEG)) / step));
-        for (let j = 0; j < count; j++) {
-          const lng = -180 + ((j + (row % 2) * 0.5) * 360) / count;
-          const px = Math.min(w - 1, Math.floor(((lng + 180) / 360) * w));
-          const py = Math.min(h - 1, Math.floor(((90 - lat) / 180) * h));
-          const o = (py * w + px) * 4;
-          if (pixels[o + 3] < 128 || pixels[o] < 200) continue;
-          const v = toVec(lat, lng);
-          xs.push(v[0]);
-          ys.push(v[1]);
-          zs.push(v[2]);
-          ls.push(level);
-          const id = pixels[o + 1] + Math.round(pixels[o + 2] / 64) * 256 - 1;
-          cs.push(pixels[o + 3] === 255 && id >= 0 && id < this.countries.length ? id : -1);
-        }
+    let row = 0;
+    for (let lat = -56; lat <= 80 + 1e-9; lat += FINE_STEP, row++) {
+      const coarseCount = Math.max(1, Math.floor((360 * Math.cos(lat * DEG)) / COARSE_STEP));
+      const count = coarseCount * 2;
+      const coarseRow = row % 2 === 0;
+      for (let j = 0; j < count; j++) {
+        // Coarse rows: even slots are coarse dots (offset by one slot on alternate coarse rows for a
+        // staggered pattern), odd slots are fine. Rows in between are all fine, set half a slot over.
+        const slot = coarseRow ? j + ((row >> 1) % 2) : j + 0.5;
+        const level = coarseRow && j % 2 === 0 ? 0 : 1;
+        const lng = -180 + (slot * 360) / count;
+        const px = Math.min(w - 1, Math.floor(((lng + 180) / 360) * w));
+        const py = Math.min(h - 1, Math.floor(((90 - lat) / 180) * h));
+        const o = (py * w + px) * 4;
+        if (pixels[o + 3] < 128 || pixels[o] < 200) continue;
+        const v = toVec(lat, lng);
+        xs.push(v[0]);
+        ys.push(v[1]);
+        zs.push(v[2]);
+        ls.push(level);
+        const id = pixels[o + 1] + Math.round(pixels[o + 2] / 64) * 256 - 1;
+        cs.push(pixels[o + 3] === 255 && id >= 0 && id < this.countries.length ? id : -1);
       }
-    });
+    }
     this.n = xs.length;
     this.dx = Float32Array.from(xs);
     this.dy = Float32Array.from(ys);
     this.dz = Float32Array.from(zs);
     this.dCountry = Int16Array.from(cs);
     this.dLevel = Uint8Array.from(ls);
-    this.buckets = Array.from({ length: 10 }, () => new Float32Array(this.n * 2));
+    this.buckets = Array.from({ length: DEPTH_LEVELS * 2 }, () => new Float32Array(this.n * 2));
     this.warmXY = new Float32Array(this.n * 4);
   }
 
@@ -389,10 +423,10 @@ export class GlobeEngine {
     const signals = this.opts.signals;
     this.index = (this.index + 1) % signals.length;
     const s = signals[this.index];
-    const dist = angle(toVec(this.cLat, this.cLng), toVec(s.lat, s.lng));
+    const dist = angle(toVec(this.gLat, this.gLng), toVec(s.lat, s.lng));
     this.fly = {
-      along: geoInterpolate([this.cLng, this.cLat], [s.lng, s.lat]),
-      s0: this.scale,
+      along: geoInterpolate([this.gLng, this.gLat], [s.lng, s.lat]),
+      s0: this.gScale,
       s1: s.zoom,
       dur: this.opts.reducedMotion ? 1.2 : 3.0 + 0.8 * clamp01(dist / 120),
     };
@@ -403,8 +437,9 @@ export class GlobeEngine {
   /** Zoom over a flight: ease out to the whole globe, a slight extra breath while it turns, ease back in. */
   private flightScale(t: number) {
     const { s0, s1 } = this.fly;
-    if (t < PULL_BACK) return lerp(s0, 1, easeInOutCubic(t / PULL_BACK));
-    if (t > 1 - DIVE_IN) return lerp(1, s1, easeInOutCubic((t - (1 - DIVE_IN)) / DIVE_IN));
+    // Sine easing peaks at well under half the acceleration of cubic, so the zoom never lurches.
+    if (t < PULL_BACK) return lerp(s0, 1, easeInOutSine(t / PULL_BACK));
+    if (t > 1 - DIVE_IN) return lerp(1, s1, easeInOutSine((t - (1 - DIVE_IN)) / DIVE_IN));
     const u = (t - PULL_BACK) / (1 - PULL_BACK - DIVE_IN);
     return 1 - 0.05 * Math.pow(Math.sin(Math.PI * u), 2);
   }
@@ -413,21 +448,24 @@ export class GlobeEngine {
     if (!this.ready) return;
     this.time += dt;
     this.phaseT += dt;
-    const drift = this.opts.reducedMotion ? 0.1 : 0.45;
+    // The slow drift while a signal is open eases in and out rather than switching on and off.
+    const drifting = this.phase === 'arrive' || this.phase === 'show';
+    const driftGoal = drifting ? (this.opts.reducedMotion ? 0.1 : 0.45) : 0;
+    this.driftV += (driftGoal - this.driftV) * (1 - Math.exp(-dt / 0.6));
 
     switch (this.phase) {
       case 'intro':
         // Spin eases to rest so the first flight starts from still, not from a sudden stop.
-        this.cLng += (this.opts.reducedMotion ? 2 : 10) * dt * (1 - smoothstep((this.phaseT - INTRO_TIME * 0.3) / (INTRO_TIME * 0.7)));
+        this.gLng += (this.opts.reducedMotion ? 2 : 10) * dt * (1 - smoothstep((this.phaseT - INTRO_TIME * 0.3) / (INTRO_TIME * 0.7)));
         if (this.phaseT > INTRO_TIME) this.startFly();
         break;
       case 'fly': {
         const t = clamp01(this.phaseT / this.fly.dur);
         // The turn starts a little after the pull-back and settles a little before the dive ends.
         const [lng, lat] = this.fly.along(easeInOutSine(clamp01((t - 0.1) / 0.78)));
-        this.cLng = lng;
-        this.cLat = lat;
-        this.scale = this.opts.reducedMotion ? lerp(this.fly.s0, this.fly.s1, easeInOutSine(t)) : this.flightScale(t);
+        this.gLng += wrap180(lng - this.gLng);
+        this.gLat = lat;
+        this.gScale = this.opts.reducedMotion ? lerp(this.fly.s0, this.fly.s1, easeInOutSine(t)) : this.flightScale(t);
         if (t >= 1) {
           const s = this.opts.signals[this.index];
           this.target = toVec(s.lat, s.lng);
@@ -438,22 +476,25 @@ export class GlobeEngine {
         break;
       }
       case 'arrive':
-        this.cLng += drift * dt;
         if (this.phaseT > ARRIVE_TIME) this.setPhase('show');
         break;
       case 'show':
-        this.cLng += drift * dt;
-        this.scale *= 1 + 0.012 * dt;
+        this.gScale *= 1 + 0.012 * dt;
         if (this.phaseT > SHOW_TIME) {
           if (!this.visited.includes(this.index)) this.visited.push(this.index);
           this.setPhase('leave');
         }
         break;
       case 'leave':
-        this.cLng += drift * dt;
         if (this.phaseT > LEAVE_TIME) this.startFly();
         break;
     }
+    if (this.phase !== 'fly') this.gLng += this.driftV * dt;
+
+    // Camera follows the goal through critically damped springs: smooth velocity at every phase change.
+    this.cLng = smoothDamp(this.cLng, this.gLng, this.vLng, 0.22, dt);
+    this.cLat = smoothDamp(this.cLat, this.gLat, this.vLat, 0.22, dt);
+    this.scale = smoothDamp(this.scale, this.gScale, this.vScale, 0.26, dt);
 
     const lit = this.phase === 'arrive' || this.phase === 'show';
     this.hl = clamp01(this.hl + (lit ? dt / 0.9 : -dt / 0.6));
@@ -569,6 +610,10 @@ export class GlobeEngine {
       ctx.restore();
     }
 
+    // Orbit rings sit around the whole globe and fade out as the camera dives in.
+    const ringVis = (1 - k) * (this.opts.reducedMotion ? 0.6 : 1);
+    if (ringVis > 0.01) this.drawOrbits(false, ringVis);
+
     // Atmosphere and lit ocean.
     const be = R * BASE_EXTENT;
     ctx.drawImage(this.baseSprite, tx - be, ty - be, be * 2, be * 2);
@@ -587,7 +632,12 @@ export class GlobeEngine {
       const coast = new Path2D();
       this.path.context(coast as unknown as CanvasRenderingContext2D)(this.land);
       this.path.context(ctx);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+      // Soft glow along the coasts, then the land itself.
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = `rgba(${INK_SOFT}, 0.14)`;
+      ctx.stroke(coast);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       ctx.fill(coast);
       ctx.lineWidth = 0.9;
       ctx.strokeStyle = `rgba(${INK}, 0.28)`;
@@ -632,12 +682,67 @@ export class GlobeEngine {
     // Depth shading, rim light and specular highlight.
     ctx.drawImage(this.shadeSprite, tx - R, ty - R, R * 2, R * 2);
 
+    if (ringVis > 0.01) this.drawOrbits(true, ringVis);
     this.drawHubs(zoomed);
     this.drawArcs(zoomed);
     this.drawVisited();
     if (pinVisible) this.drawPin(pinX, pinY);
 
     this.updateOverlays(pinVisible, pinX, pinY);
+  }
+
+  /**
+   * Two tilted orbit rings with satellites. The back pass draws the whole ring (the globe then covers
+   * the far side); the front pass redraws the near half and the satellites passing in front.
+   */
+  private drawOrbits(front: boolean, vis: number) {
+    const { ctx, R, tx, ty } = this;
+    const rings = this.wide
+      ? [
+          { r: 1.3, tilt: -0.32, flat: 0.24, speed: 0.22, sats: 2 },
+          { r: 1.52, tilt: 0.18, flat: 0.2, speed: -0.14, sats: 1 },
+        ]
+      : [
+          { r: 1.14, tilt: -0.32, flat: 0.24, speed: 0.22, sats: 2 },
+          { r: 1.28, tilt: 0.18, flat: 0.2, speed: -0.14, sats: 1 },
+        ];
+    for (const [i, ring] of rings.entries()) {
+      const rx = R * ring.r;
+      const ry = rx * ring.flat;
+      ctx.save();
+      ctx.translate(tx, ty);
+      ctx.rotate(ring.tilt);
+      ctx.lineWidth = 1;
+      ctx.setLineDash(i === 1 ? [2, 6] : []);
+      ctx.strokeStyle = `rgba(${INK_SOFT}, ${(front ? 0.4 : 0.22) * vis})`;
+      ctx.beginPath();
+      if (front) ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI);
+      else ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      for (let k = 0; k < ring.sats; k++) {
+        const th = this.time * ring.speed + (k * TAU) / ring.sats + i;
+        const inFront = Math.sin(th) > 0;
+        if (inFront !== front) continue;
+        const x = rx * Math.cos(th);
+        const y = ry * Math.sin(th);
+        const g = ctx.createRadialGradient(x, y, 0, x, y, 10);
+        g.addColorStop(0, `rgba(${VIOLET}, ${0.5 * vis})`);
+        g.addColorStop(1, `rgba(${VIOLET}, 0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 255, 255, ${vis})`;
+        ctx.strokeStyle = `rgba(${INK}, ${0.8 * vis})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.2, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
   }
 
   private drawDots(revealDeg: number) {
@@ -652,18 +757,16 @@ export class GlobeEngine {
     count.fill(0);
     this.warmCount = 0;
 
-    const fine = smoothstep((this.scale - 1.35) / 0.5);
-    const levelAlpha = [1 - fine, fine];
+    const fine = smoothstep((this.scale - 1.3) / 0.6);
+    const levelAlpha = [1, fine];
+    // All dots shrink together as the in-between dots fade in.
+    const dotSize = Math.max(1, R * lerp(COARSE_STEP, FINE_STEP, fine) * DEG * 0.34);
     const hlOn = this.hl > 0 && this.hlCountry >= 0;
     const [Tx, Ty, Tz] = this.target;
     const cosReveal = Math.cos(revealDeg * DEG);
     const age = this.time - this.arriveAt;
     const ripple = this.opts.reducedMotion ? -1 : (age % 2.2) * 4.5; // degrees from the pin
     const cosRipple = Math.cos(11 * DEG);
-    // A slow highlight band that sweeps around the globe.
-    const sweep = this.time * 0.22;
-    const swX = Math.cos(sweep);
-    const swY = Math.sin(sweep);
     const margin = 6;
 
     for (let i = 0; i < this.n; i++) {
@@ -698,9 +801,8 @@ export class GlobeEngine {
         this.warmXY[o + 3] = level;
         this.warmCount++;
       }
-      let b = depth > 0.8 ? 4 : Math.floor(depth * 5);
-      if (b < 4 && X * swX + Y * swY > 0.985) b++;
-      const slot = level * 5 + b;
+      const b = depth >= 0.875 ? DEPTH_LEVELS - 1 : Math.floor((depth / 0.875) * DEPTH_LEVELS);
+      const slot = level * DEPTH_LEVELS + b;
       const o = count[slot] * 2;
       const arr = this.buckets[slot];
       arr[o] = sx;
@@ -708,24 +810,19 @@ export class GlobeEngine {
       count[slot]++;
     }
 
-    const alphas = [0.22, 0.36, 0.52, 0.68, 0.85];
-    for (let b = 0; b < 10; b++) {
+    for (let b = 0; b < DEPTH_LEVELS * 2; b++) {
       if (!count[b]) continue;
-      const level = b < 5 ? 0 : 1;
-      const baseSize = Math.max(1, R * DOT_STEPS[level] * DEG * 0.32);
-      const size = baseSize * (0.6 + 0.1 * (b % 5));
+      const level = b < DEPTH_LEVELS ? 0 : 1;
+      const d = (b % DEPTH_LEVELS) / (DEPTH_LEVELS - 1);
+      // Dots stay under ~2.7px at every zoom, where a square reads as a dot and is far cheaper than an arc.
+      // One shape throughout also means nothing pops when the size changes.
+      const size = dotSize * (0.6 + 0.4 * d);
       const half = size / 2;
-      const round = size > 2;
       const arr = this.buckets[b];
-      ctx.fillStyle = `rgba(${INK}, ${alphas[b % 5] * levelAlpha[level]})`;
+      ctx.fillStyle = `rgba(${INK}, ${(0.22 + 0.63 * d) * levelAlpha[level]})`;
       ctx.beginPath();
       for (let j = 0, m = count[b] * 2; j < m; j += 2) {
-        if (round) {
-          ctx.moveTo(arr[j] + half, arr[j + 1]);
-          ctx.arc(arr[j], arr[j + 1], half, 0, TAU);
-        } else {
-          ctx.rect(arr[j] - half, arr[j + 1] - half, size, size);
-        }
+        ctx.rect(arr[j] - half, arr[j + 1] - half, size, size);
       }
       ctx.fill();
     }
@@ -734,7 +831,7 @@ export class GlobeEngine {
       const o = j * 4;
       const a = Math.min(1, this.warmXY[o + 2]);
       const level = this.warmXY[o + 3];
-      const size = Math.max(1, R * DOT_STEPS[level] * DEG * 0.32) * (1 + 0.45 * a);
+      const size = dotSize * (1 + 0.45 * a);
       // Drawn over the indigo dot, so orange blends in and out from zero rather than swapping colour.
       ctx.fillStyle = `rgba(${WARM}, ${a * levelAlpha[level]})`;
       ctx.beginPath();

@@ -1,13 +1,10 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Clock3, FileSearch, PenLine } from 'lucide-react';
+import { ArrowUpRight, Search } from 'lucide-react';
 import SignalGlobe from './globe/SignalGlobe';
-import { brand, demoHref, demoLinkProps } from '../brand';
+import { demoHref, demoLinkProps } from '../brand';
+import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 
-const proofPoints = [
-  { icon: FileSearch, label: 'Evidence on every account' },
-  { icon: Clock3, label: 'Timed to real buying windows' },
-  { icon: PenLine, label: 'Outreach written from the signal' },
-];
+const headline = ["Know who's", 'ready to buy.', 'And exactly why.'];
 
 const fadeUp = (delay: number) => ({
   initial: { opacity: 0, y: 18 },
@@ -18,48 +15,41 @@ const fadeUp = (delay: number) => ({
 export default function Hero() {
   return (
     <section id="top" className="scroll-mt-20 px-2 pt-2 sm:px-4 sm:pt-4">
-      <div className="relative mx-auto flex max-w-[1600px] flex-col overflow-hidden rounded-[28px] bg-[#f5f6ff] ring-1 ring-indigo-100 xl:block xl:h-[clamp(700px,calc(100svh-96px),860px)]">
-        {/* Ambient light */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_60%_at_72%_48%,rgba(165,180,252,0.55),transparent_70%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_40%_45%_at_100%_0%,rgba(196,181,253,0.45),transparent_70%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_35%_40%_at_0%_100%,rgba(253,186,116,0.22),transparent_70%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(rgba(99,102,241,0.18)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_25%_40%,black,transparent_65%)]" />
+      <div className="relative isolate mx-auto flex max-w-[1600px] flex-col overflow-hidden rounded-[28px] bg-[#f4f5ff] ring-1 ring-indigo-100 xl:block xl:h-[clamp(700px,calc(100svh-104px),860px)]">
+        {/* Slowly drifting light behind the globe. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute left-[55%] top-[10%] h-[70%] w-[50%] rounded-full bg-[radial-gradient(closest-side,var(--tw-gradient-stops))] from-indigo-300/80 to-transparent animate-[drift-a_22s_ease-in-out_infinite]" />
+          <div className="absolute right-[-10%] top-[-20%] h-[60%] w-[45%] rounded-full bg-[radial-gradient(closest-side,var(--tw-gradient-stops))] from-violet-300/75 to-transparent animate-[drift-b_26s_ease-in-out_infinite]" />
+          <div className="absolute bottom-[-25%] left-[30%] h-[55%] w-[45%] rounded-full bg-[radial-gradient(closest-side,var(--tw-gradient-stops))] from-orange-200/80 to-transparent animate-[drift-c_30s_ease-in-out_infinite]" />
+          <div className="absolute inset-0 opacity-60 [background-image:radial-gradient(rgba(99,102,241,0.16)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_25%_40%,black,transparent_65%)]" />
+        </div>
 
         {/* Globe stage: full-bleed behind the copy on wide screens, its own block below the copy otherwise. */}
-        <div className="relative order-2 h-[680px] sm:h-[720px] xl:absolute xl:inset-0 xl:h-auto">
+        <div className="relative order-2 h-[600px] sm:h-[700px] xl:absolute xl:inset-0 xl:h-auto">
           <SignalGlobe />
         </div>
-        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52%] bg-[linear-gradient(to_right,#f5f6ff_0%,rgba(245,246,255,0.9)_45%,transparent_100%)] xl:block" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-[linear-gradient(to_right,#f4f5ff_0%,rgba(244,245,255,0.88)_45%,transparent_100%)] xl:block" />
 
-        <div className="relative z-10 order-1 px-6 pt-14 sm:px-10 sm:pt-20 xl:flex xl:h-full xl:max-w-[640px] xl:flex-col xl:justify-center xl:px-16 xl:pb-16 xl:pt-0">
-          <motion.div
-            {...fadeUp(0)}
-            className="inline-flex w-fit items-center gap-2 rounded-full border border-indigo-100 bg-white/80 px-3 py-1.5 shadow-sm shadow-indigo-900/5"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-orange-500" />
-            </span>
-            <span className="text-xs font-medium text-slate-600">Signal-based account intelligence</span>
-          </motion.div>
+        <div className="relative z-10 order-1 px-6 pt-14 sm:px-10 sm:pt-20 xl:flex xl:h-full xl:max-w-[700px] xl:flex-col xl:justify-center xl:px-16 xl:pb-10 xl:pt-0">
+          <h1 className="text-[2.35rem] font-bold leading-[1.04] tracking-[-0.035em] text-slate-900 min-[400px]:text-[2.6rem] sm:text-6xl xl:text-[4.25rem]">
+            {headline.map((line, i) => (
+              <motion.span
+                key={line}
+                initial={{ opacity: 0, y: 26, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{ duration: 0.8, delay: 0.1 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                className={`block w-fit ${
+                  i === headline.length - 1
+                    ? 'bg-gradient-to-r from-indigo-600 via-violet-600 to-orange-500 bg-clip-text pb-[0.06em] text-transparent'
+                    : ''
+                }`}
+              >
+                {line}
+              </motion.span>
+            ))}
+          </h1>
 
-          <motion.h1
-            {...fadeUp(0.08)}
-            className="mt-6 text-[2.6rem] font-semibold leading-[1.04] tracking-[-0.03em] text-slate-900 sm:text-6xl xl:text-[4.1rem]"
-          >
-            Know who's ready to buy.{' '}
-            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-orange-500 bg-clip-text text-transparent">
-              And exactly why.
-            </span>
-          </motion.h1>
-
-          <motion.p {...fadeUp(0.16)} className="mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-            {brand.name} tracks hiring, funding, leadership moves, tech changes and filings, then hands your team the
-            accounts worth targeting now. Each one comes with its evidence, its timing and the outreach to act on it.
-            No vague lists.
-          </motion.p>
-
-          <motion.div {...fadeUp(0.24)} className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <motion.div {...fadeUp(0.45)} className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               href={demoHref}
               {...demoLinkProps}
@@ -71,25 +61,14 @@ export default function Hero() {
               </span>
             </a>
             <a
-              href="#how-it-works"
-              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white/70 px-6 py-3.5 font-semibold text-slate-800 transition-colors hover:border-slate-400 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              href={`#${TOP_ACCOUNTS_HASH}`}
+              className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-white/80 px-6 py-3.5 font-semibold text-slate-800 shadow-sm ring-1 ring-indigo-200 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md hover:ring-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
             >
-              See how it works
+              <Search className="h-4 w-4 text-indigo-600" />
+              See my top accounts
             </a>
           </motion.div>
-
-          <motion.ul {...fadeUp(0.32)} className="mt-10 grid gap-3 sm:grid-cols-3 sm:gap-4">
-            {proofPoints.map(({ icon: Icon, label }) => (
-              <li key={label} className="flex items-center gap-2.5 text-sm text-slate-600">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-indigo-100 bg-white">
-                  <Icon className="h-3.5 w-3.5 text-indigo-600" />
-                </span>
-                {label}
-              </li>
-            ))}
-          </motion.ul>
         </div>
-
       </div>
     </section>
   );

@@ -13,7 +13,7 @@ const columns = [
   {
     title: 'Company',
     links: [
-      { href: '#why', label: `Why ${brand.name}` },
+      { href: '#top-accounts', label: 'See my top accounts' },
       { href: '#faq', label: 'FAQ' },
       { href: '#contact', label: 'Contact' },
     ],

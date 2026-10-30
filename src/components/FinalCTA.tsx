@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Mail } from 'lucide-react';
-import { brand, demoLinkProps } from '../brand';
+import { ArrowUpRight } from 'lucide-react';
+import { brand, demoHref, demoLinkProps } from '../brand';
+import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 
 export default function FinalCTA() {
   return (
@@ -23,23 +24,28 @@ export default function FinalCTA() {
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href={brand.demoUrl || `mailto:${brand.email}?subject=Demo%20request`}
-              {...demoLinkProps}
+              href={`#${TOP_ACCOUNTS_HASH}`}
               className="group inline-flex items-center gap-4 rounded-full bg-slate-900 py-1.5 pl-6 pr-1.5 font-semibold text-white shadow-[0_12px_30px_-10px_rgba(49,46,129,0.55)] transition-transform hover:-translate-y-0.5"
             >
-              Book a demo
+              See my top accounts
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-900 transition-transform duration-300 group-hover:rotate-45">
                 <ArrowUpRight className="h-5 w-5" />
               </span>
             </a>
             <a
-              href={`mailto:${brand.email}`}
+              href={demoHref}
+              {...demoLinkProps}
               className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/70 px-6 py-3.5 font-semibold text-slate-800 transition-colors hover:border-slate-400 hover:bg-white"
             >
-              <Mail className="h-4 w-4" />
-              {brand.email}
+              Book a demo
             </a>
           </div>
+          <p className="mt-6 text-sm text-slate-500">
+            Or email us at{' '}
+            <a href={`mailto:${brand.email}`} className="font-medium text-indigo-700 hover:underline">
+              {brand.email}
+            </a>
+          </p>
         </div>
       </motion.div>
     </section>

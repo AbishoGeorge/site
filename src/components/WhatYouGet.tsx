@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { BadgeCheck, Building2, Landmark, Link2, Mail, Phone, Sparkles, UserPlus } from 'lucide-react';
 
 const fade = (delay: number) => ({
@@ -7,6 +8,58 @@ const fade = (delay: number) => ({
   viewport: { once: true, margin: '-80px' },
   transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
 });
+
+const emailParagraphs = [
+  'Hi Megan,',
+  'Congrats on the Series C and on joining as VP of Sales. Teams that grow this fast usually find their reps spending more time researching than selling.',
+  'We help sales teams focus on accounts that are ready to buy right now. Worth a 15-minute look next week?',
+];
+
+/** Types the draft out once it scrolls into view, as if it were being written from the signal. */
+function TypedEmail({ paragraphs }: { paragraphs: string[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
+  const reduce = useReducedMotion();
+  const total = paragraphs.reduce((n, p) => n + p.length, 0);
+  const [typed, setTyped] = useState(0);
+  const shown = reduce ? total : typed;
+
+  useEffect(() => {
+    if (!inView || reduce || typed >= total) return;
+    const id = window.setTimeout(() => setTyped((t) => Math.min(total, t + 2)), 18);
+    return () => window.clearTimeout(id);
+  }, [inView, reduce, typed, total]);
+
+  let left = shown;
+  return (
+    <div ref={ref} className="relative px-4 py-4 text-sm leading-relaxed text-slate-700">
+      <div className="sr-only">
+        {paragraphs.map((p) => (
+          <p key={p}>{p}</p>
+        ))}
+      </div>
+      {/* Full text reserves the height so the card never grows while typing. */}
+      <div aria-hidden="true" className="invisible space-y-3">
+        {paragraphs.map((p) => (
+          <p key={p}>{p}</p>
+        ))}
+      </div>
+      <div aria-hidden="true" className="absolute inset-0 space-y-3 px-4 py-4">
+        {paragraphs.map((p, i) => {
+          const visible = p.slice(0, Math.max(0, left));
+          const typing = left > 0 && left < p.length;
+          left -= p.length;
+          return (
+            <p key={i}>
+              {visible}
+              {typing && <span className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 animate-pulse bg-indigo-500" />}
+            </p>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 const contacts = [
   { name: 'Megan W.', title: 'VP of Sales', email: 'me•••@••••••.com', phone: '+1 512 •••-•186', fit: 'Decision maker' },
@@ -31,7 +84,7 @@ export default function WhatYouGet() {
 
         <div className="mt-14 grid gap-5 lg:grid-cols-3">
           {/* 1. Signals */}
-          <motion.article {...fade(0.05)} className="flex flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80">
+          <motion.article {...fade(0.05)} className="flex flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(79,70,229,0.45)]">
             <Step n={1} title="The signal and its proof" />
             <div className="mt-5 flex-1 space-y-2.5">
               {[
@@ -57,7 +110,7 @@ export default function WhatYouGet() {
           </motion.article>
 
           {/* 2. People */}
-          <motion.article {...fade(0.15)} className="flex flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80">
+          <motion.article {...fade(0.15)} className="flex flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(79,70,229,0.45)]">
             <Step n={2} title="The people to reach out to" />
             <ul className="mt-5 flex-1 space-y-2.5">
               {contacts.map((c) => (
@@ -97,7 +150,7 @@ export default function WhatYouGet() {
           </motion.article>
 
           {/* 3. Outreach */}
-          <motion.article {...fade(0.25)} className="flex flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80">
+          <motion.article {...fade(0.25)} className="flex flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(79,70,229,0.45)]">
             <Step n={3} title="A first message, written from the signal" />
             <div className="mt-5 flex-1 overflow-hidden rounded-2xl ring-1 ring-slate-200">
               <div className="space-y-1.5 border-b border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-500">
@@ -109,16 +162,7 @@ export default function WhatYouGet() {
                   <span className="font-medium text-slate-700">Scaling the team after the Series C</span>
                 </div>
               </div>
-              <div className="space-y-3 px-4 py-4 text-sm leading-relaxed text-slate-700">
-                <p>Hi Megan,</p>
-                <p>
-                  Congrats on the Series C and on joining as VP of Sales. Teams that grow this fast usually find their
-                  reps spending more time researching than selling.
-                </p>
-                <p>
-                  We help sales teams focus on accounts that are ready to buy right now. Worth a 15-minute look next week?
-                </p>
-              </div>
+              <TypedEmail paragraphs={emailParagraphs} />
             </div>
             <div className="mt-4 flex items-center gap-2 text-xs font-medium text-indigo-700">
               <Sparkles className="h-3.5 w-3.5" />
