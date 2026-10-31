@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Loader2, Lock, Mail, RotateCcw } from 'lucide-react';
+import { ArrowRight, Check, Loader2, Lock, Mail } from 'lucide-react';
 import { brand } from '../../brand';
 import { submitLead, type LeadResult } from '../overlay/lead';
 import CompanyLogo from './CompanyLogo';
@@ -20,26 +20,18 @@ const previewRows = [
 ];
 const MOBILE_ROWS = 5;
 
-export default function ResultsStep({ domain, onChangeWebsite }: { domain: string; onChangeWebsite: () => void }) {
+export default function ResultsStep({ domain }: { domain: string }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12"
+      className="mx-auto max-w-7xl px-4 pb-10 pt-2 sm:px-6 lg:pb-14"
     >
       <div className="flex flex-wrap items-center gap-3">
         <CompanyLogo domain={domain} className="h-10 w-10 rounded-xl shadow-sm ring-1 ring-indigo-100" />
         <span className="font-semibold text-slate-800">{domain}</span>
-        <button
-          type="button"
-          onClick={onChangeWebsite}
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-white hover:text-slate-800"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Change website
-        </button>
       </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10">

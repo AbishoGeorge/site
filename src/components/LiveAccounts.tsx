@@ -121,14 +121,7 @@ export default function LiveAccounts() {
         />
 
         <div className="relative mx-auto max-w-3xl px-6 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300 ring-1 ring-white/10">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            </span>
-            Example accounts
-          </span>
-          <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-5xl">
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
             Accounts showing buying signals right now
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400">
@@ -178,7 +171,7 @@ export default function LiveAccounts() {
               <ArrowUpRight className="h-5 w-5" />
             </span>
           </a>
-          <span className="text-sm text-slate-400">Free preview for your company</span>
+          <span className="text-sm text-slate-400">Free preview for your company · Accounts shown are examples</span>
         </div>
       </div>
     </section>

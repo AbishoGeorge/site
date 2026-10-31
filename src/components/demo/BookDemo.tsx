@@ -26,8 +26,8 @@ const rise = (delay: number) => ({
 export default function BookDemo() {
   const { open, close, openCount } = useHashOverlay(BOOK_DEMO_HASH);
   return (
-    <OverlayShell open={open} onClose={close} label="Book a demo">
-      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 lg:min-h-[calc(100svh-65px)] lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:py-14">
+    <OverlayShell open={open} onClose={close} backLabel="Home" label="Book a demo">
+      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-10 pt-2 sm:px-6 lg:min-h-[calc(100svh-180px)] lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:py-14">
         <div>
           <motion.span
             {...rise(0)}

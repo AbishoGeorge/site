@@ -25,8 +25,19 @@ export default function AccountsFlow() {
     if (openCount) setStep('website');
   }, [openCount]);
 
+  const stepIndex = step === 'website' ? 0 : step === 'scan' ? 1 : 2;
+
   return (
-    <OverlayShell open={open} onClose={close} label="See your top accounts">
+    <OverlayShell
+      open={open}
+      onClose={close}
+      onBack={step === 'website' ? close : () => setStep('website')}
+      backLabel={step === 'website' ? 'Home' : step === 'scan' ? 'Cancel' : 'Change website'}
+      label="See your top accounts"
+      steps={['Your website', 'Scan', 'Your top 10']}
+      step={stepIndex}
+      scrollKey={step}
+    >
       <AnimatePresence mode="wait">
         {step === 'website' && (
           <WebsiteStep
@@ -39,7 +50,7 @@ export default function AccountsFlow() {
           />
         )}
         {step === 'scan' && <ScanStep key="scan" domain={domain} onDone={() => setStep('results')} />}
-        {step === 'results' && <ResultsStep key="results" domain={domain} onChangeWebsite={() => setStep('website')} />}
+        {step === 'results' && <ResultsStep key="results" domain={domain} />}
       </AnimatePresence>
     </OverlayShell>
   );
@@ -60,7 +71,7 @@ function WebsiteStep({ initial, onSubmit }: { initial: string; onSubmit: (domain
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-[calc(100svh-65px)] max-w-4xl flex-col items-center justify-center px-5 py-16 text-center"
+      className="mx-auto flex min-h-[calc(100svh-180px)] max-w-4xl flex-col items-center justify-center px-5 pb-16 pt-6 text-center"
     >
       <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
         Free preview
@@ -146,7 +157,7 @@ function ScanStep({ domain, onDone }: { domain: string; onDone: () => void }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-[calc(100svh-65px)] max-w-md flex-col items-center justify-center px-5 py-16"
+      className="mx-auto flex min-h-[calc(100svh-180px)] max-w-md flex-col items-center justify-center px-5 pb-16 pt-6"
       aria-live="polite"
     >
       <div className="relative flex h-32 w-32 items-center justify-center">

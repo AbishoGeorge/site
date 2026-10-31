@@ -32,8 +32,7 @@ export default function FAQ() {
     <section id="faq" className="scroll-mt-24 border-y border-slate-200 bg-slate-50 py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:px-8">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">FAQ</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Questions teams ask first.</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Questions teams ask first.</h2>
           <p className="mt-4 text-lg text-gray-500">
             Anything else? <a href="#contact" className="font-medium text-indigo-600 hover:underline">Get in touch</a>.
           </p>

@@ -5,8 +5,9 @@ import { brand, demoHref, demoLinkProps } from '../brand';
 import Logo from './Logo';
 
 const links = [
+  { href: '#stories', label: 'Stories' },
   { href: '#live-accounts', label: 'Live accounts' },
-  { href: '#what-you-get', label: 'What you get' },
+  { href: '#about', label: 'About' },
   { href: '#faq', label: 'FAQ' },
   { href: '#top-accounts', label: 'See my top accounts' },
 ];

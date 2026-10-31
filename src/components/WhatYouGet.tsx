@@ -72,8 +72,7 @@ export default function WhatYouGet() {
     <section id="what-you-get" className="scroll-mt-24 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div {...fade(0)} className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">What you get</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
             Every account arrives ready to work.
           </h2>
           <p className="mt-4 text-lg text-slate-600">
