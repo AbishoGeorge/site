@@ -295,7 +295,7 @@ export class GlobeEngine {
     this.draw();
   }
 
-  /** Rasterise country shapes to an equirectangular bitmap and sample it into an even dot grid. */
+  /** Rasterize country shapes to an equirectangular bitmap and sample it into an even dot grid. */
   private buildDots() {
     const w = 1440;
     const h = 720;

@@ -7,7 +7,8 @@ const columns = [
   {
     title: 'Product',
     links: [
-      { href: '#live-accounts', label: 'Live accounts' },
+      { href: '#industries', label: 'Industries' },
+      { href: '#live-accounts', label: 'Active targets' },
       { href: '#what-you-get', label: 'What you get' },
       { href: `#${TOP_ACCOUNTS_HASH}`, label: 'See my top accounts' },
     ],
@@ -15,7 +16,7 @@ const columns = [
   {
     title: 'Company',
     links: [
-      { href: '#stories', label: 'Customer stories' },
+      { href: '#use-cases', label: 'Use cases' },
       { href: '#about', label: 'Who we are' },
       { href: '#faq', label: 'FAQ' },
       { href: demoHref, label: 'Book a demo' },

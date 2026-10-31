@@ -68,9 +68,12 @@ body {
   }
 }
 
-@keyframes marquee-y {
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
   to {
-    transform: translateY(-50%);
+    transform: scaleX(1);
   }
 }
 

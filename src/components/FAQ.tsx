@@ -8,6 +8,10 @@ const faqs = [
     a: 'A database gives you every company that matches a filter. We give you the few that are showing buying signals right now, with the source and date for each signal, so your team knows why to reach out and what to say.',
   },
   {
+    q: 'Which industries do you work with?',
+    a: 'We work with B2B teams selling into cybersecurity, software, IT services, logistics, fintech, HR and staffing, healthcare and manufacturing. The signals we watch are tuned to each market, so a security vendor and a logistics vendor get very different lists.',
+  },
+  {
     q: 'Where do the signals come from?',
     a: 'Public sources: job postings, funding and grant announcements, company news, regulatory filings, earnings calls, tenders and leadership changes. Every signal on an account links back to where it was found.',
   },

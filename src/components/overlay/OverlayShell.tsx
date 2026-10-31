@@ -14,7 +14,7 @@ interface OverlayShellProps {
   /** Optional step trail for multi-step flows. */
   steps?: string[];
   step?: number;
-  /** Changing this scrolls the panel back to the top, e.g. when moving between steps or stories. */
+  /** Changing this scrolls the panel back to the top, e.g. when moving between steps or use cases. */
   scrollKey?: string | number;
   children: ReactNode;
 }

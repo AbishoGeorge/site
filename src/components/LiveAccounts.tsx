@@ -122,16 +122,17 @@ export default function LiveAccounts() {
 
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
-            Accounts showing buying signals right now
+            This is what your active targets look like
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400">
-            Each account arrives with the signal, the context and the person to contact. Here is what your list will
-            look like.
+            Every account arrives with the signal, the context and the person to contact, ready for your team to act
+            on.
           </p>
         </div>
 
         <p className="sr-only">
-          A rotating preview of example accounts. Each shows a buying signal, why it matters now and who to contact.
+          A rotating preview of what each account brief contains: a buying signal, why it matters now and who to
+          contact.
         </p>
         <div
           aria-hidden="true"
@@ -171,7 +172,7 @@ export default function LiveAccounts() {
               <ArrowUpRight className="h-5 w-5" />
             </span>
           </a>
-          <span className="text-sm text-slate-400">Free preview for your company · Accounts shown are examples</span>
+          <span className="text-sm text-slate-400">Free preview for your company · Company names are illustrative</span>
         </div>
       </div>
     </section>

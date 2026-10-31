@@ -1,5 +1,5 @@
 import { useId, useMemo } from 'react';
-import type { CaseVisual, LogoMark } from '../../content/caseStudies';
+import type { IndustryVisual } from '../../content/industries';
 
 /** Small deterministic random generator, so each artwork looks the same on every visit. */
 function seeded(seed: number) {
@@ -16,8 +16,8 @@ function seeded(seed: number) {
 const W = 400;
 const H = 520;
 
-/** Generated artwork that stands in for a photo on each story card. */
-export function CaseArt({ visual, className = '' }: { visual: CaseVisual; className?: string }) {
+/** Generated artwork for each industry, used on the use case cards and pages. */
+export function IndustryArt({ visual, className = '' }: { visual: IndustryVisual; className?: string }) {
   const uid = useId().replace(/:/g, '');
   const body = useMemo(() => {
     switch (visual) {
@@ -31,15 +31,19 @@ export function CaseArt({ visual, className = '' }: { visual: CaseVisual; classN
         return <WavesArt id={uid} />;
       case 'bars':
         return <BarsArt id={uid} />;
-      case 'orbit':
-        return <OrbitArt id={uid} />;
+      case 'circuit':
+        return <CircuitArt id={uid} />;
+      case 'pulse':
+        return <PulseArt id={uid} />;
+      case 'blueprint':
+        return <BlueprintArt id={uid} />;
     }
   }, [visual, uid]);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className={className} aria-hidden="true">
       {body}
-      {/* Darken the top and bottom so the logo and text stay readable on any artwork. */}
+      {/* Darken the top and bottom so the text stays readable on any artwork. */}
       <defs>
         <linearGradient id={`${uid}-shade`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#020617" stopOpacity="0.45" />
@@ -253,62 +257,115 @@ function BarsArt({ id }: { id: string }) {
   );
 }
 
-function OrbitArt({ id }: { id: string }) {
-  const rand = seeded(23);
-  const stars = Array.from({ length: 70 }, () => [rand() * W, rand() * H * 0.7, rand()]);
+function CircuitArt({ id }: { id: string }) {
+  const rand = seeded(31);
+  const step = 26;
+  const traces = Array.from({ length: 24 }, (_, k) => {
+    let x = Math.round((rand() * W) / step) * step;
+    let y = Math.round((rand() * H * 0.62) / step) * step;
+    let d = `M${x} ${y}`;
+    let across = rand() > 0.5;
+    const turns = 3 + Math.floor(rand() * 4);
+    for (let t = 0; t < turns; t++) {
+      const len = step * (1 + Math.floor(rand() * 3));
+      if (across) x += rand() > 0.5 ? len : -len;
+      else y += len;
+      d += ` L${x} ${y}`;
+      across = !across;
+    }
+    return { d, x, y, hot: k === 9 };
+  });
+  const hot = traces.find((t) => t.hot)!;
   return (
     <>
-      <rect width={W} height={H} fill="#0c1a3d" />
+      <rect width={W} height={H} fill="#061a2e" />
       <defs>
-        <radialGradient id={`${id}-planet`} cx="0.35" cy="0.3" r="0.8">
-          <stop offset="0%" stopColor="#60a5fa" />
-          <stop offset="55%" stopColor="#1d4ed8" />
-          <stop offset="100%" stopColor="#0b1a4a" />
+        <radialGradient id={`${id}-glow`} cx="0.65" cy="0.3" r="0.75">
+          <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#061a2e" stopOpacity="0" />
         </radialGradient>
       </defs>
-      {stars.map(([x, y, a], k) => (
-        <circle key={k} cx={x} cy={y} r={a > 0.85 ? 1.6 : 0.9} fill="#e0e7ff" opacity={0.25 + a * 0.6} />
+      <rect width={W} height={H} fill={`url(#${id}-glow)`} />
+      {traces.map((t, k) => (
+        <g key={k}>
+          <path
+            d={t.d}
+            fill="none"
+            stroke={t.hot ? '#fb923c' : '#7dd3fc'}
+            strokeOpacity={t.hot ? 0.95 : 0.2 + (k % 4) * 0.07}
+            strokeWidth={t.hot ? 2 : 1.3}
+            strokeLinejoin="round"
+          />
+          <circle cx={t.x} cy={t.y} r={t.hot ? 4 : 2.6} fill={t.hot ? '#fdba74' : '#bae6fd'} opacity={t.hot ? 1 : 0.6} />
+        </g>
       ))}
-      <ellipse cx="290" cy="420" rx="250" ry="70" fill="none" stroke="#93c5fd" strokeOpacity="0.35" transform="rotate(-14 290 420)" />
-      <circle cx="300" cy="470" r="220" fill={`url(#${id}-planet)`} />
-      <ellipse cx="290" cy="420" rx="250" ry="70" fill="none" stroke="#bfdbfe" strokeOpacity="0.55" strokeDasharray="3 7" transform="rotate(-14 290 420)" />
-      <circle cx="80" cy="455" r="5" fill="#fdba74" />
-      <circle cx="80" cy="455" r="12" fill="none" stroke="#fdba74" strokeOpacity="0.45" />
+      <circle cx={hot.x} cy={hot.y} r={13} fill="none" stroke="#fdba74" strokeOpacity="0.5" />
+      <circle cx={hot.x} cy={hot.y} r={24} fill="none" stroke="#fdba74" strokeOpacity="0.25" />
     </>
   );
 }
 
-/** A simple invented logo mark for each sample company. */
-export function LogoGlyph({ mark, className = 'h-7 w-7' }: { mark: LogoMark; className?: string }) {
-  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+function PulseArt({ id }: { id: string }) {
+  const base = 205;
+  let d = `M-10 ${base}`;
+  for (let x0 = -10; x0 < W + 10; x0 += 140) {
+    d +=
+      ` L${x0 + 30} ${base} Q${x0 + 38} ${base - 12} ${x0 + 46} ${base} L${x0 + 56} ${base}` +
+      ` L${x0 + 61} ${base + 14} L${x0 + 68} ${base - 72} L${x0 + 75} ${base + 26} L${x0 + 81} ${base}` +
+      ` L${x0 + 96} ${base} Q${x0 + 108} ${base - 20} ${x0 + 120} ${base} L${x0 + 140} ${base}`;
+  }
+  const peak: [number, number] = [-10 + 140 * 2 + 68, base - 72];
   return (
-    <svg viewBox="0 0 28 28" className={className} aria-hidden="true">
-      {mark === 'split' && (
-        <>
-          <path d="M14 3a11 11 0 0 0 0 22" {...common} />
-          <path d="M17 6a8 8 0 0 1 0 16" {...common} />
-        </>
-      )}
-      {mark === 'triangle' && (
-        <>
-          <path d="M14 3 25 23H3Z" {...common} />
-          <circle cx="14" cy="16" r="2" fill="currentColor" />
-        </>
-      )}
-      {mark === 'hex' && <path d="M14 2.5 24 8.25v11.5L14 25.5 4 19.75V8.25Z" {...common} />}
-      {mark === 'dot' && (
-        <>
-          <circle cx="14" cy="14" r="10.5" {...common} />
-          <circle cx="14" cy="14" r="4" fill="currentColor" />
-        </>
-      )}
-      {mark === 'wave' && (
-        <>
-          <path d="M3 10c3.5-4 7.5-4 11 0s7.5 4 11 0" {...common} />
-          <path d="M3 18c3.5-4 7.5-4 11 0s7.5 4 11 0" {...common} />
-        </>
-      )}
-      {mark === 'ring' && <path d="M22 9.5A9.5 9.5 0 1 1 14 4.5" {...common} />}
-    </svg>
+    <>
+      <rect width={W} height={H} fill="#032321" />
+      <defs>
+        <radialGradient id={`${id}-glow`} cx="0.8" cy="0.35" r="0.7">
+          <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#032321" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${id}-glow)`} />
+      {Array.from({ length: 16 }, (_, k) => (
+        <line key={`v${k}`} x1={k * 26} y1={0} x2={k * 26} y2={H} stroke="#5eead4" strokeOpacity="0.07" />
+      ))}
+      {Array.from({ length: 21 }, (_, k) => (
+        <line key={`h${k}`} x1={0} y1={k * 26} x2={W} y2={k * 26} stroke="#5eead4" strokeOpacity="0.07" />
+      ))}
+      <path d={d} fill="none" stroke="#2dd4bf" strokeOpacity="0.18" strokeWidth="9" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#99f6e4" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx={peak[0]} cy={peak[1]} r={4.5} fill="#fdba74" />
+      <circle cx={peak[0]} cy={peak[1]} r={13} fill="none" stroke="#fdba74" strokeOpacity="0.45" />
+    </>
+  );
+}
+
+function BlueprintArt({ id }: { id: string }) {
+  const line = { fill: 'none', stroke: '#e0f2fe', strokeOpacity: 0.75, strokeWidth: 1.6, strokeLinejoin: 'round' as const };
+  return (
+    <>
+      <rect width={W} height={H} fill="#0a2246" />
+      <defs>
+        <radialGradient id={`${id}-glow`} cx="0.3" cy="0.3" r="0.8">
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#0a2246" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${id}-glow)`} />
+      {Array.from({ length: 21 }, (_, k) => (
+        <line key={`v${k}`} x1={k * 20} y1={0} x2={k * 20} y2={H} stroke="#93c5fd" strokeOpacity={k % 5 === 0 ? 0.16 : 0.06} />
+      ))}
+      {Array.from({ length: 27 }, (_, k) => (
+        <line key={`h${k}`} x1={0} y1={k * 20} x2={W} y2={k * 20} stroke="#93c5fd" strokeOpacity={k % 5 === 0 ? 0.16 : 0.06} />
+      ))}
+      {/* A plant drawn as a technical sketch: sawtooth roof, chimney and a new line marked out in orange. */}
+      <path d="M40 300 L40 220 L100 180 L100 220 L160 180 L160 220 L220 180 L220 220 L280 180 L280 300 Z" {...line} />
+      <path d="M300 300 L300 120 L326 120 L326 300" {...line} />
+      <path d="M296 120 L330 120" {...line} />
+      <rect x="60" y="246" width="130" height="34" rx="3" fill="#fb923c" fillOpacity="0.12" stroke="#fb923c" strokeWidth="2" />
+      <path d="M40 322 L280 322 M40 316 L40 328 M280 316 L280 328" {...line} strokeOpacity={0.45} />
+      <circle cx="340" cy="80" r="30" {...line} strokeDasharray="4 5" strokeOpacity={0.55} />
+      <circle cx="340" cy="80" r="11" {...line} strokeOpacity={0.55} />
+      <path d="M340 40 L340 120 M300 80 L380 80" {...line} strokeOpacity={0.25} />
+    </>
   );
 }

@@ -75,8 +75,8 @@ export default function SignalGlobe() {
   return (
     <div className="absolute inset-0">
       <p className="sr-only">
-        Animated example: a globe turns and zooms into one country at a time, and shows one example buying signal
-        found there.
+        Animation: a globe turns and zooms into one country at a time, and shows the kind of buying signal we find
+        there.
       </p>
       <canvas ref={canvasRef} className="absolute inset-0 block" aria-hidden="true" />
 
