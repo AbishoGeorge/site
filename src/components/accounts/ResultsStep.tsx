@@ -75,7 +75,7 @@ export default function ResultsStep({ domain }: { domain: string }) {
         <h1 className="mt-3 text-3xl font-bold tracking-[-0.03em] text-slate-900 sm:text-4xl xl:text-5xl">
           Your top 10 accounts
         </h1>
-        <p className="mt-2 hidden max-w-2xl text-slate-600 sm:block">
+        <p className="mt-2 hidden max-w-2xl text-slate-600 sm:block [@media(max-height:700px)]:hidden">
           This is how your list will look. Company names, contacts and the full signal unlock when we build it for{' '}
           {domain}.
         </p>
@@ -265,7 +265,7 @@ function UnlockCard({
       <h2 className="relative mt-1.5 text-xl font-bold leading-tight tiny:hidden sm:text-2xl">
         Get all 10 accounts, with the people to contact
       </h2>
-      <p className="relative mt-1.5 hidden text-sm text-slate-300 sm:block">
+      <p className="relative mt-1.5 hidden text-sm text-slate-300 sm:block [@media(max-height:700px)]:hidden">
         We research the list for {domain} and send it to your inbox.
       </p>
 

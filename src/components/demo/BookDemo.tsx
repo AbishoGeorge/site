@@ -28,7 +28,7 @@ export default function BookDemo() {
   const { open, close, openCount } = useHashOverlay(BOOK_DEMO_HASH);
   return (
     <OverlayShell open={open} onClose={close} backLabel="Home" label="Book a demo">
-      <section className="mx-auto grid min-h-full max-w-6xl content-center items-center gap-4 px-4 pb-4 sm:gap-6 sm:px-6 lg:grid-cols-[1fr_430px] lg:gap-16 lg:pb-6">
+      <section className="mx-auto grid min-h-full max-w-6xl content-center items-center gap-4 px-4 pb-4 sm:gap-6 sm:px-6 lg:grid-cols-[1fr_430px] lg:gap-12 lg:pb-6 xl:gap-16 [@media(max-height:700px)]:pb-4">
         {/* On very short screens the form alone is shown. */}
         <div className="tiny:hidden">
           <motion.span
@@ -40,7 +40,7 @@ export default function BookDemo() {
           </motion.span>
           <motion.h1
             {...rise(0.06)}
-            className="text-[1.5rem] font-bold leading-[1.1] tracking-[-0.03em] text-slate-900 min-[380px]:text-[1.625rem] sm:mt-5 sm:text-5xl xl:text-[3.4rem]"
+            className="text-[1.5rem] font-bold leading-[1.1] tracking-[-0.03em] text-slate-900 min-[380px]:text-[1.625rem] sm:mt-5 sm:text-5xl lg:text-[clamp(2.125rem,3.4vw,3.1rem)]"
           >
             Meet your next customers.
             <span className="block bg-gradient-to-r from-indigo-600 via-violet-600 to-orange-500 bg-clip-text pb-1 text-transparent">
@@ -163,7 +163,7 @@ function DemoForm() {
   return (
     <form
       onSubmit={submit}
-      className="rounded-3xl bg-white p-5 shadow-[0_30px_80px_-40px_rgba(49,46,129,0.5)] ring-1 ring-slate-200 sm:p-6"
+      className="rounded-3xl bg-white p-5 shadow-[0_30px_80px_-40px_rgba(49,46,129,0.5)] ring-1 ring-slate-200 sm:p-6 [@media(max-height:700px)]:p-5"
     >
       <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Book your demo</h2>
       <p className="mt-1 text-balance text-sm text-slate-500 tiny:hidden">
