@@ -29,7 +29,7 @@ export default function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="scroll-mt-24 border-y border-slate-200 bg-slate-50 py-20 sm:py-28">
+    <section id="faq" className="scroll-mt-24 border-t border-slate-200 py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:px-8">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Questions teams ask first.</h2>

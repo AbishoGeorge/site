@@ -7,7 +7,7 @@ import { caseHref } from './caseLinks';
 export default function CaseStudies() {
   const loop = [...caseStudies, ...caseStudies];
   return (
-    <section id="stories" className="scroll-mt-24 py-16 sm:py-20">
+    <section id="stories" className="scroll-mt-24 border-y border-slate-200 bg-slate-50 py-16 sm:py-20">
       <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           Teams that sell on signals

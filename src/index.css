@@ -6,6 +6,11 @@ html {
   scroll-behavior: smooth;
 }
 
+:root {
+  /* Hero backdrop: a cool lavender grey, deep enough for the white globe to stand out. */
+  --hero-bg: #d6dbf0;
+}
+
 @layer base {
   h1,
   h2,
@@ -60,6 +65,12 @@ body {
   }
   50% {
     transform: translate3d(12%, -8%, 0);
+  }
+}
+
+@keyframes marquee-y {
+  to {
+    transform: translateY(-50%);
   }
 }
 

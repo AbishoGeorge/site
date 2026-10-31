@@ -15,20 +15,19 @@ const fadeUp = (delay: number) => ({
 export default function Hero() {
   return (
     <section id="top" className="scroll-mt-20 px-2 pt-2 sm:px-4 sm:pt-4">
-      <div className="relative isolate mx-auto flex max-w-[1600px] flex-col overflow-hidden rounded-[28px] bg-[#f4f5ff] ring-1 ring-indigo-100 xl:block xl:h-[clamp(700px,calc(100svh-104px),860px)]">
-        {/* Slowly drifting light behind the globe. */}
+      <div className="relative isolate mx-auto flex max-w-[1600px] flex-col overflow-hidden rounded-[28px] bg-[color:var(--hero-bg)] ring-1 ring-indigo-200/70 xl:block xl:h-[clamp(700px,calc(100svh-104px),860px)]">
+        {/* One soft light behind the globe and a faint vignette: a calm, slightly deeper backdrop. */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute left-[55%] top-[10%] h-[70%] w-[50%] rounded-full bg-[radial-gradient(closest-side,var(--tw-gradient-stops))] from-indigo-300/80 to-transparent animate-[drift-a_22s_ease-in-out_infinite]" />
-          <div className="absolute right-[-10%] top-[-20%] h-[60%] w-[45%] rounded-full bg-[radial-gradient(closest-side,var(--tw-gradient-stops))] from-violet-300/75 to-transparent animate-[drift-b_26s_ease-in-out_infinite]" />
-          <div className="absolute bottom-[-25%] left-[30%] h-[55%] w-[45%] rounded-full bg-[radial-gradient(closest-side,var(--tw-gradient-stops))] from-orange-200/80 to-transparent animate-[drift-c_30s_ease-in-out_infinite]" />
-          <div className="absolute inset-0 opacity-60 [background-image:radial-gradient(rgba(99,102,241,0.16)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_25%_40%,black,transparent_65%)]" />
+          <div className="absolute left-[38%] top-[-5%] h-[110%] w-[70%] rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.85),rgba(255,255,255,0.35)_55%,transparent)] animate-[drift-a_26s_ease-in-out_infinite] xl:left-[42%]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_90%_at_60%_45%,transparent_55%,rgba(67,56,202,0.12))]" />
+          <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(rgba(67,56,202,0.18)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_20%_40%,black,transparent_60%)]" />
         </div>
 
         {/* Globe stage: full-bleed behind the copy on wide screens, its own block below the copy otherwise. */}
         <div className="relative order-2 h-[600px] sm:h-[700px] xl:absolute xl:inset-0 xl:h-auto">
           <SignalGlobe />
         </div>
-        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-[linear-gradient(to_right,#f4f5ff_0%,rgba(244,245,255,0.88)_45%,transparent_100%)] xl:block" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-[linear-gradient(to_right,var(--hero-bg)_0%,color-mix(in_srgb,var(--hero-bg)_88%,transparent)_45%,transparent_100%)] xl:block" />
 
         <div className="relative z-10 order-1 px-6 pt-14 sm:px-10 sm:pt-20 xl:flex xl:h-full xl:max-w-[700px] xl:flex-col xl:justify-center xl:px-16 xl:pb-10 xl:pt-0">
           <h1 className="text-[2.35rem] font-bold leading-[1.04] tracking-[-0.035em] text-slate-900 min-[400px]:text-[2.6rem] sm:text-6xl xl:text-[4.25rem]">

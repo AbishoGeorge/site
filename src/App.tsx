@@ -1,9 +1,10 @@
 import { MotionConfig } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import CaseStudies from './components/cases/CaseStudies';
+import Clients from './components/Clients';
 import LiveAccounts from './components/LiveAccounts';
 import WhatYouGet from './components/WhatYouGet';
+import CaseStudies from './components/cases/CaseStudies';
 import About from './components/About';
 import FAQ from './components/FAQ';
 import FinalCTA from './components/FinalCTA';
@@ -18,9 +19,10 @@ export default function App() {
       <Navbar />
       <main className="pt-20">
         <Hero />
-        <CaseStudies />
+        <Clients />
         <LiveAccounts />
         <WhatYouGet />
+        <CaseStudies />
         <About />
         <FAQ />
         <FinalCTA />

@@ -28,7 +28,7 @@ const principles = [
 
 export default function About() {
   return (
-    <section id="about" className="scroll-mt-24 px-2 pb-16 sm:px-4 sm:pb-24">
+    <section id="about" className="scroll-mt-24 px-2 py-10 sm:px-4 sm:py-14">
       <div className="mx-auto max-w-[1600px] rounded-[28px] bg-[#f4f5ff] px-6 py-16 ring-1 ring-indigo-100 sm:px-10 sm:py-20 lg:px-16">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-16">
           <motion.div

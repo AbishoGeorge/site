@@ -161,19 +161,20 @@ export class GlobeEngine {
   // The sphere's gradients never change shape, only size, so they are painted once and scaled.
   private baseSprite = GlobeEngine.paintSprite(BASE_EXTENT, (c) => {
     const halo = c.createRadialGradient(0, 0, 0.97, 0, 0, BASE_EXTENT);
-    halo.addColorStop(0, `rgba(${INK_SOFT}, 0.55)`);
-    halo.addColorStop(0.25, `rgba(${INK_SOFT}, 0.22)`);
-    halo.addColorStop(0.6, `rgba(${VIOLET}, 0.08)`);
+    halo.addColorStop(0, `rgba(${INK_SOFT}, 0.75)`);
+    halo.addColorStop(0.22, `rgba(${INK_SOFT}, 0.3)`);
+    halo.addColorStop(0.6, `rgba(${VIOLET}, 0.1)`);
     halo.addColorStop(1, `rgba(${VIOLET}, 0)`);
     c.fillStyle = halo;
     c.beginPath();
     c.arc(0, 0, BASE_EXTENT, 0, TAU);
     c.fill();
     const ocean = c.createRadialGradient(-0.35, -0.4, 0.05, 0, 0, 1.02);
-    ocean.addColorStop(0, '#f2f6ff');
-    ocean.addColorStop(0.45, '#d6e2ff');
-    ocean.addColorStop(0.8, '#adc2f7');
-    ocean.addColorStop(1, '#8ea7ec');
+    // A deeper ocean so the white continents read clearly.
+    ocean.addColorStop(0, '#e4ecff');
+    ocean.addColorStop(0.42, '#a9c0fa');
+    ocean.addColorStop(0.8, '#6787ea');
+    ocean.addColorStop(1, '#3f5dcc');
     c.fillStyle = ocean;
     c.beginPath();
     c.arc(0, 0, 1, 0, TAU);
@@ -184,7 +185,7 @@ export class GlobeEngine {
     const shade = c.createRadialGradient(-0.3, -0.35, 0.1, -0.3, -0.35, 1.55);
     shade.addColorStop(0, 'rgba(30, 27, 90, 0)');
     shade.addColorStop(0.5, 'rgba(30, 27, 90, 0)');
-    shade.addColorStop(1, 'rgba(30, 27, 90, 0.42)');
+    shade.addColorStop(1, 'rgba(20, 18, 72, 0.55)');
     c.fillStyle = shade;
     c.beginPath();
     c.arc(0, 0, 1, 0, TAU);
@@ -192,7 +193,7 @@ export class GlobeEngine {
     // Thin bright rim where the atmosphere catches the light.
     const rim = c.createRadialGradient(0, 0, 0.92, 0, 0, 1);
     rim.addColorStop(0, 'rgba(224, 231, 255, 0)');
-    rim.addColorStop(1, 'rgba(224, 231, 255, 0.6)');
+    rim.addColorStop(1, 'rgba(214, 222, 255, 0.8)');
     c.fillStyle = rim;
     c.fill();
     // Specular highlight.
@@ -607,7 +608,7 @@ export class GlobeEngine {
       ctx.translate(tx, ty + R * 1.12);
       ctx.scale(1, 0.13);
       const sh = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 0.85);
-      sh.addColorStop(0, 'rgba(30, 27, 75, 0.38)');
+      sh.addColorStop(0, 'rgba(30, 27, 75, 0.45)');
       sh.addColorStop(1, 'rgba(30, 27, 75, 0)');
       ctx.fillStyle = sh;
       ctx.beginPath();
@@ -627,7 +628,7 @@ export class GlobeEngine {
     this.projection.rotate([-this.cLng, -this.cLat]).translate([tx, ty]).scale(R);
 
     ctx.lineWidth = 0.6;
-    ctx.strokeStyle = `rgba(${INK}, 0.1)`;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.beginPath();
     this.path(this.graticule);
     ctx.stroke();
@@ -643,12 +644,12 @@ export class GlobeEngine {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       ctx.fill(coast);
       ctx.lineWidth = 0.9;
-      ctx.strokeStyle = `rgba(${INK}, 0.28)`;
+      ctx.strokeStyle = `rgba(${INK}, 0.45)`;
       ctx.stroke(coast);
     }
     if (this.borders) {
       ctx.lineWidth = 0.7;
-      ctx.strokeStyle = `rgba(${INK}, ${0.14 + 0.22 * zoomed})`;
+      ctx.strokeStyle = `rgba(${INK}, ${0.18 + 0.22 * zoomed})`;
       ctx.beginPath();
       this.path(this.borders);
       ctx.stroke();
