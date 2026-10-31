@@ -7,6 +7,7 @@ import { useHashOverlay } from '../overlay/useHashOverlay';
 import { TOP_ACCOUNTS_HASH } from '../accounts/AccountsFlow';
 import { CaseArt, LogoGlyph } from './CaseArt';
 import { CASE_HASH, caseHref } from './caseLinks';
+import { signalIcon } from '../signalIcon';
 
 export default function CaseStudyPage() {
   const { open, close, param } = useHashOverlay(CASE_HASH);
@@ -106,11 +107,18 @@ function Story({ study, next }: { study: CaseStudy; next: CaseStudy }) {
           <div className="mt-6">
             <div className="text-sm font-semibold text-slate-900">Signals they used</div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {study.signals.map((s) => (
-                <span key={s} className="rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-orange-700 ring-1 ring-orange-100">
-                  {s}
-                </span>
-              ))}
+              {study.signals.map((s) => {
+                const Icon = signalIcon(s);
+                return (
+                  <span
+                    key={s}
+                    className="flex items-center gap-1.5 rounded-full bg-orange-50 py-1 pl-2 pr-3 text-sm font-medium text-orange-700 ring-1 ring-orange-100"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {s}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </section>

@@ -51,7 +51,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 1.6,
     source: 'Local news',
     age: '3 days ago',
-    contact: { name: 'Arjun M.', title: 'VP, Delivery', email: 'ar•••@••••••.in', phone: '+91 98••• ••• 317' },
+    contact: { name: 'Arjun M.', title: 'VP of Delivery', email: 'ar•••@••••••.in', phone: '+91 98••• ••• 317' },
   },
   {
     id: 'tokyo',
@@ -71,7 +71,7 @@ export const exampleSignals: ExampleSignal[] = [
   {
     id: 'sydney',
     kind: 'funding',
-    headline: 'Awarded a A$12M grant to modernise patient records',
+    headline: 'Awarded an A$12M grant to modernize patient records',
     segment: 'Healthcare · 900 employees',
     city: 'Sydney',
     countryCode: 'AU',
@@ -96,7 +96,7 @@ export const exampleSignals: ExampleSignal[] = [
     zoom: 1.9,
     source: 'Press release',
     age: '6 days ago',
-    contact: { name: 'Omar H.', title: 'VP Operations', email: 'om•••@•••••••.ae', phone: '+971 50 ••• •• 71' },
+    contact: { name: 'Omar H.', title: 'VP of Operations', email: 'om•••@•••••••.ae', phone: '+971 50 ••• •• 71' },
   },
   {
     id: 'munich',
@@ -173,7 +173,7 @@ export const signalKindLabel: Record<SignalKind, string> = {
 /** Short tags that flicker up at other cities while the camera holds on a signal. */
 export const ambientTags = [
   'Hiring surge',
-  'New VP Sales',
+  'New VP of Sales',
   'Funding round',
   'New office',
   'Tech change',

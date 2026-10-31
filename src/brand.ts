@@ -9,8 +9,8 @@ export const brand = {
   demoUrl: '',
   year: 2026,
   /**
-   * Where the "See my top accounts" request form is sent, e.g. a Formspree or HubSpot form endpoint that
-   * accepts a JSON POST. Leave empty and the form opens the visitor's email app addressed to `email` instead.
+   * Where both forms (book a demo, unlock top accounts) are sent, e.g. a Formspree or HubSpot form endpoint that
+   * accepts a JSON POST. Leave empty and the forms open the visitor's email app addressed to `email` instead.
    */
   formEndpoint: '',
 };

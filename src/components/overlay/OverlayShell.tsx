@@ -89,15 +89,14 @@ export default function OverlayShell({
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-x-0 bottom-0 top-[76px] z-[46] px-2 pb-2 sm:px-4 sm:pb-4"
           >
-            <div
-              ref={scrollRef}
-              className="relative h-full overflow-y-auto overscroll-contain rounded-[28px] bg-[#f7f8fc] shadow-[0_-20px_80px_-30px_rgba(30,27,75,0.45)] ring-1 ring-indigo-100"
-            >
+            {/* The header stays put and the content gets exactly the space below it, so each step is laid out to
+                fit one screen. The content only scrolls on very short screens. */}
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[28px] bg-[#f7f8fc] shadow-[0_-20px_80px_-30px_rgba(30,27,75,0.45)] ring-1 ring-indigo-100">
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 top-0 h-[480px] opacity-70 [background-image:radial-gradient(rgba(99,102,241,0.14)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:linear-gradient(to_bottom,black,transparent)]"
               />
-              <div className="sticky top-0 z-10 flex items-center gap-4 bg-[#f7f8fc]/85 px-4 py-3 backdrop-blur-md sm:px-6">
+              <div className="relative z-10 flex shrink-0 items-center gap-4 px-4 py-2.5 sm:px-6">
                 <button
                   ref={backRef}
                   type="button"
@@ -171,7 +170,9 @@ export default function OverlayShell({
                   </>
                 )}
               </div>
-              <div className="relative">{children}</div>
+              <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                {children}
+              </div>
             </div>
           </motion.div>
         </>

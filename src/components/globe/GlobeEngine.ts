@@ -121,7 +121,7 @@ export class GlobeEngine {
   private focusY = 0;
   private R0 = 1;
 
-  // Camera: lat/lng at the centre of the view, zoom, and where the globe sits on screen.
+  // Camera: lat/lng at the center of the view, zoom, and where the globe sits on screen.
   private cLng = -20;
   private cLat = 24;
   private scale = 1;
@@ -867,7 +867,7 @@ export class GlobeEngine {
       const a = Math.min(1, this.warmXY[o + 2]);
       const level = this.warmXY[o + 3];
       const size = dotSize * (1 + 0.45 * a);
-      // Drawn over the indigo dot, so orange blends in and out from zero rather than swapping colour.
+      // Drawn over the indigo dot, so orange blends in and out from zero rather than swapping color.
       ctx.fillStyle = `rgba(${WARM}, ${a * levelAlpha[level]})`;
       ctx.beginPath();
       ctx.arc(this.warmXY[o], this.warmXY[o + 1], size / 2, 0, TAU);

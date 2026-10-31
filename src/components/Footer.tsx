@@ -1,4 +1,4 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUp, ArrowUpRight } from 'lucide-react';
 import { brand, demoHref, demoLinkProps } from '../brand';
 import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 import Logo from './Logo';
@@ -69,8 +69,9 @@ export default function Footer() {
           <span>
             © {brand.year} {brand.name}. All rights reserved.
           </span>
-          <a href="#top" className="transition-colors hover:text-white">
-            Back to top ↑
+          <a href="#top" className="group flex items-center gap-1.5 transition-colors hover:text-white">
+            Back to top
+            <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
           </a>
         </div>
       </div>

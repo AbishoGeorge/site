@@ -13,7 +13,7 @@ export default function CaseStudies() {
           Teams that sell on signals
         </h2>
         <p className="max-w-md text-slate-600">
-          How sales teams find, time and win their best accounts. Tap a story to read it.
+          How sales teams find, time and win their best accounts. Pick a story to see how they did it.
         </p>
       </div>
 

@@ -1,5 +1,5 @@
 /**
- * Customer stories for the looping strip under the hero and the story pages behind each card.
+ * Customer stories for the looping strip before "Who we are" and the story pages behind each card.
  *
  * These are DRAFTS. The companies, people, numbers and quotes are invented to show the format, and every entry is
  * marked `sample: true`, which puts a "Sample" tag on the card and the story page. Replace each one with a real,
@@ -43,8 +43,8 @@ export const caseStudies: CaseStudy[] = [
       'Reps worked from a list of 4,000 "ideal" accounts with no sense of timing. Most cold outreach landed months too early or too late, and research took up half of every SDR\'s week.',
     approach: [
       'Defined five buying triggers from their last 40 closed deals.',
-      'Received a ranked list of 25 accounts each week, each with its signal and source.',
-      'Opened every first email with the signal, written from the draft provided.',
+      'Got a ranked list of 25 accounts every week, each with its signal and source.',
+      'Opened every first email with the signal, starting from the draft provided.',
     ],
     signals: ['Funding round', 'New VP of Sales', 'Hiring surge', 'CRM renewal'],
     results: [
@@ -106,7 +106,7 @@ export const caseStudies: CaseStudy[] = [
       'A small team with a big market: they could only work a few hundred accounts a quarter and had no way to tell which ones were changing.',
     approach: [
       'Tracked expansion news, planning permits and operations job posts.',
-      'Prioritised accounts where two or more signals appeared within 60 days.',
+      'Prioritized accounts where two or more signals appeared within 60 days.',
       'Mapped the operations and IT leaders behind each account.',
     ],
     signals: ['New distribution hub', 'Operations hiring', 'Funding round', 'WMS evaluation'],
@@ -136,7 +136,7 @@ export const caseStudies: CaseStudy[] = [
       'SDRs spent most of each day reading company news and LinkedIn before every touch, which capped how many accounts each person could work.',
     approach: [
       'Each account arrived with the signal, the context and the right contact.',
-      'Reps reviewed and personalised drafts instead of writing from scratch.',
+      'Reps reviewed and personalized drafts instead of writing from scratch.',
       'Managers tracked which signal types turned into meetings.',
     ],
     signals: ['Tech stack change', 'New data leader', 'Earnings call mention', 'Hiring surge'],
@@ -146,7 +146,7 @@ export const caseStudies: CaseStudy[] = [
       { value: '44%', label: 'more first meetings' },
     ],
     quote: {
-      text: 'It is the research our SDRs would do if they had unlimited time.',
+      text: "It's the research our SDRs would do if they had unlimited time.",
       name: 'Elena K.',
       role: 'Director of Revenue Operations',
     },

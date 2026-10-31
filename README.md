@@ -14,7 +14,7 @@ npm run dev
 ## Make it yours
 
 - **Brand name, email and demo link:** `src/brand.ts`. Also update the `<title>` and meta tags in `index.html`, and the logo in `src/components/Logo.tsx` and `public/favicon.svg`.
-- **Accounts shown on the globe and the ticker:** `src/components/globe/signals.ts`. The companies there are fictional examples. Each entry's `country` must match a name in `world-atlas/countries-110m.json`, and `zoom` sets how far the globe zooms in.
+- **Accounts shown on the globe:** `src/components/globe/signals.ts`. The companies there are fictional examples. Each entry's `country` must match a name in `world-atlas/countries-110m.json`, and `zoom` sets how far the globe zooms in.
 - **Globe timing and look:** constants at the top of `src/components/globe/GlobeEngine.ts`.
 - **Forms (book a demo, unlock top accounts):** set `formEndpoint` in `src/brand.ts` to a form service URL that accepts a JSON POST (for example Formspree); each submission includes a `type` of `demo` or `top-accounts`. Until it is set, submitting opens the visitor's email app with their details, addressed to `email`. Set `demoUrl` to send every "Book a demo" button to a booking link (for example Calendly) instead of the on-site booking page.
 - **Client logos and testimonials ("Trusted by B2B teams", right under the hero):** `src/content/clients.ts`. The logos and quotes are drafts marked `sample: true`; replace them with real clients and approved quotes. Add an `image` path to show a real logo file instead of the generated wordmark.

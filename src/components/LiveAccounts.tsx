@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, BadgeCheck, CalendarDays, Mail, MapPin } from 'lucide-react';
+import { ArrowUpRight, BadgeCheck, CalendarDays, Mail, MapPin, Send, Zap, type LucideIcon } from 'lucide-react';
 import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 
 // Illustrative accounts: invented companies and people, shown to give a feel for the list.
@@ -60,7 +60,7 @@ const accounts: Account[] = [
     signal: 'New VP of Revenue Cycle hired',
     context: 'Three clinics opening across Texas, and job posts mention replacing the billing platform.',
     contact: { name: 'Megan W.', title: 'VP of Revenue Cycle', email: 'me•••@v••••••.com' },
-    angle: 'Reach her in her first 90 days, before the vendor shortlist is set.',
+    angle: 'Reach out in the first 90 days, before the vendor shortlist is set.',
   },
   {
     id: 'solenne',
@@ -87,7 +87,7 @@ const accounts: Account[] = [
     score: 5,
     signal: 'New plant announced, 600 hires planned',
     context: 'The plant goes live next year. Tenders for manufacturing and quality systems are being prepared.',
-    contact: { name: 'Arjun M.', title: 'VP, Plant Operations', email: 'ar•••@o•••••.in' },
+    contact: { name: 'Arjun M.', title: 'VP of Plant Operations', email: 'ar•••@o•••••.in' },
     angle: 'Get on the shortlist before the tender is published.',
   },
 ];
@@ -125,8 +125,8 @@ export default function LiveAccounts() {
             Accounts showing buying signals right now
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400">
-            Every account comes with the signal, the context and the person to contact. This is what your list looks
-            like.
+            Each account arrives with the signal, the context and the person to contact. Here is what your list will
+            look like.
           </p>
         </div>
 
@@ -140,7 +140,7 @@ export default function LiveAccounts() {
           className="relative mt-14 grid select-none items-start justify-items-center [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
         >
           {accounts.map((a, i) => {
-            // Position relative to the centre card, wrapped into -2..2 so the loop never shows a jump.
+            // Position relative to the center card, wrapped into -2..2 so the loop never shows a jump.
             const rel = ((i - active + n + 2) % n) - 2;
             return (
               <motion.div
@@ -208,10 +208,12 @@ function AccountCard({ account: a, active }: { account: Account; active: boolean
       </header>
 
       <div className="grid gap-x-10 gap-y-5 px-6 py-6 sm:px-8 sm:py-7 md:grid-cols-2">
-        <h3 className="text-lg font-semibold text-indigo-600 md:col-span-2">Why reach out now?</h3>
+        <Subhead icon={Zap}>Why reach out now?</Subhead>
         <Block label="Signal">{a.signal}</Block>
         <Block label="Context">{a.context}</Block>
-        <h3 className="mt-2 text-lg font-semibold text-indigo-600 md:col-span-2">Outreach plan</h3>
+        <Subhead icon={Send} className="mt-2">
+          Outreach plan
+        </Subhead>
         <Block label="Contact">
           <span className="flex items-center gap-1.5 font-semibold">
             {a.contact.name}
@@ -226,6 +228,17 @@ function AccountCard({ account: a, active }: { account: Account; active: boolean
         <Block label="Best way in">{a.angle}</Block>
       </div>
     </article>
+  );
+}
+
+function Subhead({ icon: Icon, className = '', children }: { icon: LucideIcon; className?: string; children: string }) {
+  return (
+    <h3 className={`flex items-center gap-2.5 text-lg font-semibold text-indigo-600 md:col-span-2 ${className}`}>
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
+        <Icon className="h-4 w-4" />
+      </span>
+      {children}
+    </h3>
   );
 }
 

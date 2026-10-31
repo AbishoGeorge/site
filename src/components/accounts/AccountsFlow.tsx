@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUp, Check, Search } from 'lucide-react';
+import { ArrowUp, Check, Search, Sparkles } from 'lucide-react';
 import OverlayShell from '../overlay/OverlayShell';
 import { useHashOverlay } from '../overlay/useHashOverlay';
 import CompanyLogo from './CompanyLogo';
@@ -12,7 +12,12 @@ export const TOP_ACCOUNTS_HASH = 'top-accounts';
 
 type Step = 'website' | 'scan' | 'results';
 
-const scanSteps = ['Reading your website', 'Matching your ideal customer', 'Checking live buying signals', 'Ranking your top accounts'];
+const scanSteps = [
+  'Reading your website',
+  'Working out your ideal customer',
+  'Checking live buying signals',
+  'Ranking your top accounts',
+];
 const STEP_MS = 620;
 
 export default function AccountsFlow() {
@@ -71,10 +76,11 @@ function WebsiteStep({ initial, onSubmit }: { initial: string; onSubmit: (domain
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-[calc(100svh-180px)] max-w-4xl flex-col items-center justify-center px-5 pb-16 pt-6 text-center"
+      className="mx-auto flex min-h-full max-w-4xl flex-col items-center justify-center px-5 pb-10 pt-4 text-center tiny:pb-4"
     >
-      <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
-        Free preview
+      <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm ring-1 ring-indigo-100">
+        <Sparkles className="h-3.5 w-3.5" />
+        Free preview, no sign-up
       </span>
       <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-[-0.03em] text-slate-900 sm:text-6xl">
         See which accounts are{' '}
@@ -82,8 +88,8 @@ function WebsiteStep({ initial, onSubmit }: { initial: string; onSubmit: (domain
           ready to buy what you sell
         </span>
       </h1>
-      <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
-        Enter your website and we'll show you how your top 10 accounts will look.
+      <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-600 tiny:hidden">
+        Enter your website. We'll work out who you sell to and show you how your top 10 accounts will look.
       </p>
 
       <form
@@ -98,7 +104,7 @@ function WebsiteStep({ initial, onSubmit }: { initial: string; onSubmit: (domain
           }
           onSubmit(d);
         }}
-        className="mt-10 w-full max-w-2xl"
+        className="mt-8 w-full max-w-2xl"
       >
         <label htmlFor="company-website" className="sr-only">
           Company website
@@ -157,26 +163,29 @@ function ScanStep({ domain, onDone }: { domain: string; onDone: () => void }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-[calc(100svh-180px)] max-w-md flex-col items-center justify-center px-5 pb-16 pt-6"
+      className="mx-auto flex min-h-full max-w-md flex-col items-center justify-center px-5 pb-8 pt-2 tiny:pb-4"
       aria-live="polite"
     >
-      <div className="relative flex h-32 w-32 items-center justify-center">
+      <div className="relative flex h-28 w-28 items-center justify-center tiny:h-20 tiny:w-20">
         <span className="absolute inset-0 animate-[spin_1.6s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,transparent_0deg,rgba(99,102,241,0.9)_300deg,transparent_360deg)] [mask-image:radial-gradient(closest-side,transparent_calc(100%-3px),black_calc(100%-2px))]" />
         <span className="absolute inset-3 rounded-full bg-indigo-100/60" />
-        <CompanyLogo domain={domain} className="relative h-20 w-20 rounded-2xl shadow-lg ring-1 ring-indigo-100" />
+        <CompanyLogo
+          domain={domain}
+          className="relative h-16 w-16 rounded-2xl shadow-lg ring-1 ring-indigo-100 tiny:h-12 tiny:w-12"
+        />
       </div>
-      <div className="mt-6 text-center">
+      <div className="mt-5 text-center tiny:mt-3">
         <div className="text-2xl font-bold tracking-tight text-slate-900">{domain}</div>
-        <div className="mt-1 text-sm text-slate-500">Building your preview</div>
+        <div className="mt-1 text-sm text-slate-500 tiny:hidden">Building your preview. This takes a few seconds.</div>
       </div>
 
-      <ul className="mt-8 w-full space-y-2.5">
+      <ul className="mt-6 w-full space-y-2 tiny:mt-4">
         {scanSteps.map((label, i) => {
           const state = i < done ? 'done' : i === done ? 'active' : 'pending';
           return (
             <li
               key={label}
-              className={`flex items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 transition-all duration-300 ${
+              className={`flex items-center gap-3 rounded-xl bg-white px-4 py-2.5 text-sm ring-1 transition-all duration-300 tiny:py-2 ${
                 state === 'pending' ? 'text-slate-400 ring-slate-100' : 'text-slate-800 ring-slate-200'
               } ${state === 'active' ? 'shadow-md shadow-indigo-900/5' : ''}`}
             >
@@ -200,7 +209,7 @@ function ScanStep({ domain, onDone }: { domain: string; onDone: () => void }) {
           );
         })}
       </ul>
-      <div className="mt-6 h-1.5 w-full overflow-hidden rounded-full bg-indigo-100">
+      <div className="mt-6 h-1.5 w-full overflow-hidden rounded-full bg-indigo-100 tiny:mt-4">
         <motion.div
           className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-orange-400"
           initial={{ width: '6%' }}

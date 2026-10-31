@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
-import { BadgeCheck, Building2, Landmark, Link2, Mail, Phone, Sparkles, UserPlus } from 'lucide-react';
+import { BadgeCheck, Banknote, Building2, Link2, Mail, Phone, Sparkles, UserRoundCheck } from 'lucide-react';
 
 const fade = (delay: number) => ({
   initial: { opacity: 0, y: 18 },
@@ -63,7 +63,7 @@ function TypedEmail({ paragraphs }: { paragraphs: string[] }) {
 
 const contacts = [
   { name: 'Megan W.', title: 'VP of Sales', email: 'me•••@••••••.com', phone: '+1 512 •••-•186', fit: 'Decision maker' },
-  { name: 'Carlos D.', title: 'Director, Revenue Ops', email: 'ca•••@••••••.com', phone: '+1 737 •••-•042', fit: 'Champion' },
+  { name: 'Carlos D.', title: 'Director of RevOps', email: 'ca•••@••••••.com', phone: '+1 737 •••-•042', fit: 'Champion' },
   { name: 'Aisha N.', title: 'CFO', email: 'ai•••@••••••.com', phone: '+1 512 •••-•903', fit: 'Budget owner' },
 ];
 
@@ -87,8 +87,8 @@ export default function WhatYouGet() {
             <Step n={1} title="The signal and its proof" />
             <div className="mt-5 flex-1 space-y-2.5">
               {[
-                { icon: Landmark, label: 'Funding', text: '$62M Series C closed', src: 'Press release · 12 days ago' },
-                { icon: UserPlus, label: 'Leadership change', text: 'New VP of Sales joined', src: 'Company news · 3 weeks ago' },
+                { icon: Banknote, label: 'Funding', text: '$62M Series C closed', src: 'Press release · 12 days ago' },
+                { icon: UserRoundCheck, label: 'Leadership change', text: 'New VP of Sales joined', src: 'Company news · 3 weeks ago' },
                 { icon: Building2, label: 'Expansion', text: '3 new offices announced', src: 'Local news · 1 month ago' },
               ].map(({ icon: Icon, label, text, src }) => (
                 <div key={label} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3">
@@ -145,7 +145,7 @@ export default function WhatYouGet() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs text-slate-500">Contact details are shown in full to customers.</p>
+            <p className="mt-4 text-xs text-slate-500">Customers see every email and phone number in full.</p>
           </motion.article>
 
           {/* 3. Outreach */}

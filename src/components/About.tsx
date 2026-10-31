@@ -1,21 +1,21 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Clock3, FileSearch, Target, Users } from 'lucide-react';
+import { ArrowUpRight, FileCheck2, Target, Timer, UsersRound } from 'lucide-react';
 import { brand, demoHref, demoLinkProps } from '../brand';
 
 // Mission and principles. Add your own story here: when and why you started, who is on the team, where you work.
 const principles = [
   {
-    icon: FileSearch,
+    icon: FileCheck2,
     title: 'Evidence over guesswork',
-    text: 'Every signal links to its source. If we cannot show where it came from, we do not send it.',
+    text: "Every signal links to its source. If we can't show where it came from, we don't send it.",
   },
   {
-    icon: Clock3,
+    icon: Timer,
     title: 'Timing over volume',
     text: 'Ten accounts in a buying window beat a thousand that might buy someday.',
   },
   {
-    icon: Users,
+    icon: UsersRound,
     title: 'People, not just companies',
     text: 'We find who to talk to and what to say, so the first message lands.',
   },

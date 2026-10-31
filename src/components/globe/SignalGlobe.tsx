@@ -2,28 +2,29 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BadgeCheck,
-  Briefcase,
+  Banknote,
   Building2,
-  Cpu,
-  FileClock,
-  Landmark,
+  CalendarClock,
+  LineChart,
   Mail,
-  Mic,
   Phone,
-  UserPlus,
+  RefreshCcw,
+  UserRoundCheck,
+  UserRoundPlus,
   type LucideIcon,
 } from 'lucide-react';
 import { GlobeEngine, type GlobePhase } from './GlobeEngine';
 import { exampleSignals, signalKindLabel, type ExampleSignal, type SignalKind } from './signals';
 
+// The same icon stands for the same kind of signal everywhere on the site.
 const kindIcon: Record<SignalKind, LucideIcon> = {
-  funding: Landmark,
-  hiring: Briefcase,
-  leadership: UserPlus,
+  funding: Banknote,
+  hiring: UserRoundPlus,
+  leadership: UserRoundCheck,
   expansion: Building2,
-  tech: Cpu,
-  renewal: FileClock,
-  earnings: Mic,
+  tech: RefreshCcw,
+  renewal: CalendarClock,
+  earnings: LineChart,
 };
 
 const TAG_SLOTS = 3;

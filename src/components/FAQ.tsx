@@ -20,6 +20,10 @@ const faqs = [
     a: 'Signals are monitored continuously. New accounts and changes to existing ones reach you on the schedule you choose.',
   },
   {
+    q: 'What do I get from the free preview?',
+    a: "Enter your website and you'll see how your top 10 accounts will look. Leave your details and we research the full list for your company and send it to you, with the people to contact.",
+  },
+  {
     q: 'How do accounts reach my team?',
     a: 'In your CRM, in your inbox, or as a shared list. Each account comes with its evidence, suggested contacts and a first outreach draft based on the signal.',
   },
@@ -33,12 +37,12 @@ export default function FAQ() {
       <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:px-8">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Questions teams ask first.</h2>
-          <p className="mt-4 text-lg text-gray-500">
+          <p className="mt-4 text-lg text-slate-500">
             Anything else? <a href="#contact" className="font-medium text-indigo-600 hover:underline">Get in touch</a>.
           </p>
         </div>
 
-        <ul className="divide-y divide-gray-100 border-y border-gray-100">
+        <ul className="divide-y divide-slate-200 border-y border-slate-200">
           {faqs.map((f, i) => {
             const isOpen = open === i;
             return (
@@ -61,7 +65,7 @@ export default function FAQ() {
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      <p className="max-w-2xl pb-6 leading-relaxed text-gray-500">{f.a}</p>
+                      <p className="max-w-2xl pb-6 leading-relaxed text-slate-600">{f.a}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>

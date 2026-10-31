@@ -1,3 +1,5 @@
+import plugin from 'tailwindcss/plugin';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -63,5 +65,9 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // tiny: very short viewports, such as small phones with the browser bars showing. A variant rather than a
+    // screen, so the min-[...] breakpoints keep working.
+    plugin(({ addVariant }) => addVariant('tiny', '@media (max-height: 600px)')),
+  ],
 };

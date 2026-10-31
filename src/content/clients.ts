@@ -56,7 +56,7 @@ export const testimonials: Testimonial[] = [
     sample: true,
   },
   {
-    quote: 'The research is done before I open the account. That is the whole point.',
+    quote: "The research is done before I open the account. That's the whole point.",
     name: 'Priya N.',
     role: 'Head of Growth',
     company: 'Freightline',
@@ -70,7 +70,7 @@ export const testimonials: Testimonial[] = [
     sample: true,
   },
   {
-    quote: 'It is the first prospecting tool our reps actually ask for.',
+    quote: "It's the first prospecting tool our reps actually ask for.",
     name: 'Elena K.',
     role: 'Director of Revenue Operations',
     company: 'Corvo Analytics',
@@ -92,7 +92,7 @@ export const testimonials: Testimonial[] = [
     sample: true,
   },
   {
-    quote: 'We finally know why we are calling, and so does the buyer.',
+    quote: "We finally know why we're calling, and so does the buyer.",
     name: 'Tom W.',
     role: 'Account Executive',
     company: 'Lumio Payments',
