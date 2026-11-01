@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: 'Which industries do you work with?',
-    a: 'We work with B2B teams selling into cybersecurity, software, IT services, logistics, fintech, HR and staffing, healthcare and manufacturing. The signals we watch are tuned to each market, so a security vendor and a logistics vendor get very different lists.',
+    a: 'We work with B2B teams selling into cybersecurity, software, IT services, logistics, fintech, HR and staffing, healthcare, manufacturing and ERP testing. The signals we watch are tuned to each market, so a security vendor and an ERP testing company get very different lists.',
   },
   {
     q: 'Where do the signals come from?',

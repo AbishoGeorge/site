@@ -17,7 +17,16 @@ const W = 400;
 const H = 520;
 
 /** Generated artwork for each industry, used on the use case cards and pages. */
-export function IndustryArt({ visual, className = '' }: { visual: IndustryVisual; className?: string }) {
+export function IndustryArt({
+  visual,
+  align = 'center',
+  className = '',
+}: {
+  visual: IndustryVisual;
+  /** Which part stays in view when the artwork is cropped to a wide box. */
+  align?: 'center' | 'top';
+  className?: string;
+}) {
   const uid = useId().replace(/:/g, '');
   const body = useMemo(() => {
     switch (visual) {
@@ -37,11 +46,18 @@ export function IndustryArt({ visual, className = '' }: { visual: IndustryVisual
         return <PulseArt id={uid} />;
       case 'blueprint':
         return <BlueprintArt id={uid} />;
+      case 'modules':
+        return <ModulesArt id={uid} />;
     }
   }, [visual, uid]);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className={className} aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio={align === 'top' ? 'xMidYMin slice' : 'xMidYMid slice'}
+      className={className}
+      aria-hidden="true"
+    >
       {body}
       {/* Darken the top and bottom so the text stays readable on any artwork. */}
       <defs>
@@ -366,6 +382,76 @@ function BlueprintArt({ id }: { id: string }) {
       <circle cx="340" cy="80" r="30" {...line} strokeDasharray="4 5" strokeOpacity={0.55} />
       <circle cx="340" cy="80" r="11" {...line} strokeOpacity={0.55} />
       <path d="M340 40 L340 120 M300 80 L380 80" {...line} strokeOpacity={0.25} />
+    </>
+  );
+}
+
+function ModulesArt({ id }: { id: string }) {
+  // An ERP drawn as connected modules, most of them tested (ticked) and one under test in orange.
+  const cols = [44, 158, 272];
+  const rows = [46, 130, 214];
+  const w = 84;
+  const h = 58;
+  const ticked = new Set(['0-0', '1-0', '2-1', '0-2', '2-2', '1-2']);
+  const active = '1-1';
+  return (
+    <>
+      <rect width={W} height={H} fill="#1b0a2b" />
+      <defs>
+        <radialGradient id={`${id}-glow`} cx="0.5" cy="0.35" r="0.7">
+          <stop offset="0%" stopColor="#c026d3" stopOpacity="0.42" />
+          <stop offset="100%" stopColor="#1b0a2b" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${id}-glow)`} />
+      {rows.map((y, r) =>
+        cols.slice(0, -1).map((x, c) => (
+          <line key={`h${r}${c}`} x1={x + w} y1={y + h / 2} x2={cols[c + 1]} y2={y + h / 2} stroke="#f0abfc" strokeOpacity="0.2" />
+        ))
+      )}
+      {cols.map((x, c) =>
+        rows.slice(0, -1).map((y, r) => (
+          <line key={`v${r}${c}`} x1={x + w / 2} y1={y + h} x2={x + w / 2} y2={rows[r + 1]} stroke="#f0abfc" strokeOpacity="0.2" />
+        ))
+      )}
+      {rows.map((y, r) =>
+        cols.map((x, c) => {
+          const key = `${c}-${r}`;
+          const hot = key === active;
+          return (
+            <g key={key}>
+              <rect
+                x={x}
+                y={y}
+                width={w}
+                height={h}
+                rx="12"
+                fill={hot ? '#fb923c' : '#ffffff'}
+                fillOpacity={hot ? 0.14 : 0.05}
+                stroke={hot ? '#fb923c' : '#f0abfc'}
+                strokeOpacity={hot ? 0.9 : 0.25}
+                strokeWidth={hot ? 2 : 1}
+              />
+              <rect x={x + 12} y={y + 16} width={w * 0.5} height="5" rx="2.5" fill="#f5d0fe" fillOpacity="0.35" />
+              <rect x={x + 12} y={y + 30} width={w * 0.35} height="5" rx="2.5" fill="#f5d0fe" fillOpacity="0.2" />
+              {ticked.has(key) && (
+                <g>
+                  <circle cx={x + w - 16} cy={y + 17} r="8" fill="#a21caf" />
+                  <path
+                    d={`M${x + w - 20} ${y + 17} l3 3 l6 -6`}
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              )}
+            </g>
+          );
+        })
+      )}
+      <rect x={cols[1] - 9} y={rows[1] - 9} width={w + 18} height={h + 18} rx="19" fill="none" stroke="#fdba74" strokeOpacity="0.35" />
     </>
   );
 }

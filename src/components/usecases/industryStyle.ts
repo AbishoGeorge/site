@@ -1,4 +1,5 @@
 import {
+  ClipboardCheck,
   CreditCard,
   Factory,
   LayoutDashboard,
@@ -20,6 +21,7 @@ export const industryIcon: Record<IndustryIcon, LucideIcon> = {
   people: UsersRound,
   health: Stethoscope,
   factory: Factory,
+  erp: ClipboardCheck,
 };
 
 /** Full class names per accent, so Tailwind can see them. `hex` is for SVG fills. */
@@ -35,4 +37,5 @@ export const accentStyle: Record<
   emerald: { tile: 'from-emerald-500 to-teal-500', soft: 'bg-emerald-50', text: 'text-emerald-600', bar: 'bg-emerald-500', hex: '#10b981' },
   teal: { tile: 'from-teal-500 to-cyan-600', soft: 'bg-teal-50', text: 'text-teal-600', bar: 'bg-teal-500', hex: '#14b8a6' },
   orange: { tile: 'from-orange-500 to-rose-500', soft: 'bg-orange-50', text: 'text-orange-600', bar: 'bg-orange-500', hex: '#f97316' },
+  fuchsia: { tile: 'from-fuchsia-500 to-purple-600', soft: 'bg-fuchsia-50', text: 'text-fuchsia-600', bar: 'bg-fuchsia-500', hex: '#d946ef' },
 };

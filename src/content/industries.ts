@@ -1,12 +1,21 @@
 /**
- * The industries we serve and the use case behind each one. The "Industries" section after the hero and the
- * "Use cases" strip both read from this list, and each entry has its own page at #use-case-<id>.
+ * The industries we serve and one use case for each. The Industries section after the hero and the Use cases strip
+ * both read from this list, and each use case has its own page at #use-case-<id>.
  *
- * Everything here describes how the service works for teams selling into that market: the problem, the signals we
- * watch and why they matter, who we help you reach and what changes. There are no client names or results figures.
+ * Each use case follows one company through one specific problem: what goes wrong, how we solve it and what changes.
+ * The companies are described by what they sell rather than named, and there are no results figures.
  */
 
-export type IndustryVisual = 'radar' | 'bars' | 'circuit' | 'map' | 'waves' | 'skyline' | 'pulse' | 'blueprint';
+export type IndustryVisual =
+  | 'radar'
+  | 'bars'
+  | 'circuit'
+  | 'map'
+  | 'waves'
+  | 'skyline'
+  | 'pulse'
+  | 'blueprint'
+  | 'modules';
 export type IndustryIcon =
   | 'shield'
   | 'software'
@@ -15,8 +24,9 @@ export type IndustryIcon =
   | 'card'
   | 'people'
   | 'health'
-  | 'factory';
-export type Accent = 'rose' | 'indigo' | 'sky' | 'amber' | 'violet' | 'emerald' | 'teal' | 'orange';
+  | 'factory'
+  | 'erp';
+export type Accent = 'rose' | 'indigo' | 'sky' | 'amber' | 'violet' | 'emerald' | 'teal' | 'orange' | 'fuchsia';
 
 export interface Signal {
   label: string;
@@ -24,28 +34,32 @@ export interface Signal {
   why: string;
 }
 
+export interface UseCase {
+  title: string;
+  /** The company in the story, described by what it sells and to whom. */
+  company: string;
+  problem: string;
+  solution: string;
+  /** The signals the solution relies on, shown as tags. */
+  signals: string[];
+  outcomes: string[];
+}
+
 export interface Industry {
   id: string;
   name: string;
-  /** Who the use case is for, written to follow "For": the kind of company that sells into this market. */
+  /** Who sells into this market, written to follow "For". */
   audience: string;
   icon: IndustryIcon;
   accent: Accent;
   visual: IndustryVisual;
-  /** One line on when buying happens in this market, shown in the Industries section. */
+  /** One line on when buying happens in this market. */
   moment: string;
-  title: string;
-  summary: string;
-  problem: string;
-  /** What usually goes wrong without signals. */
-  pains: string[];
+  /** What we watch in this market, shown in the Industries section. */
   signals: Signal[];
   /** The people we help you reach, by role. */
   buyers: string[];
-  steps: string[];
-  /** One account as your team would receive it. */
-  brief: { account: string; signal: string; whyNow: string; contact: string; opener: string };
-  outcomes: string[];
+  useCase: UseCase;
 }
 
 export const industries: Industry[] = [
@@ -57,16 +71,6 @@ export const industries: Industry[] = [
     accent: 'rose',
     visual: 'radar',
     moment: 'Security budgets move when something changes: a new security leader, an incident nearby or a compliance deadline.',
-    title: 'Reach security leaders while the budget is still open',
-    summary:
-      'Most security purchases start with a change inside the buyer, long before an RFP is written. We watch for those changes and tell you who to call and why, while the shortlist is still forming.',
-    problem:
-      "Security teams rarely buy from a cold email. They buy when something forces the question: a new CISO has to present a plan to the board, an incident at a peer makes the risk real, or an auditor sets a date. By the time a formal RFP is published, the requirements are usually written around a vendor the buyer already knows.",
-    pains: [
-      'Reps chase the same well-known logos as every other security vendor.',
-      'Outreach arrives with no reason attached, so it reads like noise.',
-      'Deals show up late, as RFPs shaped by a competitor.',
-    ],
     signals: [
       {
         label: 'New CISO or security leader',
@@ -84,35 +88,22 @@ export const industries: Industry[] = [
         label: 'Security hiring',
         why: 'Job posts for security engineers or a SOC team show where the gaps are and which tools they run.',
       },
-      {
-        label: 'Cloud and infrastructure changes',
-        why: 'A migration or a new platform opens new ground to protect.',
-      },
     ],
-    buyers: [
-      'Chief Information Security Officer',
-      'Head of Security Operations',
-      'IT Director',
-      'Governance, risk and compliance lead',
-    ],
-    steps: [
-      'You tell us who you sell to: company size, regions and the security problems you solve.',
-      'We watch leadership moves, incident disclosures, regulatory dates and security hiring across those companies.',
-      'Each week you get the accounts where something changed, with the source for every signal and the security leaders to contact.',
-    ],
-    brief: {
-      account: 'A European payments company',
-      signal: 'Appointed a new CISO and is hiring for DORA readiness.',
-      whyNow: 'DORA now applies to payment firms, and a new security leader is setting the plan for the year.',
-      contact: 'Chief Information Security Officer, recently appointed',
-      opener:
-        "Congratulations on the new role. Most security leaders at payments firms start with DORA readiness and third-party risk. If that's on your plan, I'd like to show you how we handle the reporting side.",
+    buyers: ['Chief Information Security Officer', 'Head of Security Operations', 'IT Director'],
+    useCase: {
+      title: 'Finding the banks that need help with DORA now',
+      company: 'A security software company that sells third-party risk monitoring to banks and insurers in Europe.',
+      problem:
+        "Since DORA came into force, banks across Europe have to track the risk from their technology suppliers. The company's reps email every bank in their territory with the same message about it. Most banks have either finished that work or haven't started, so replies are rare, and the deals that do appear arrive as tenders already written around a competitor.",
+      solution:
+        'We watch for the moments that make a bank act: a new CISO or head of third-party risk, job posts for DORA and vendor risk roles, DORA programs named in annual reports, and incidents at peer banks. Every week the reps get the banks where one of these just happened, with the person who owns the problem and a first message that names it.',
+      signals: ['New CISO or risk leader', 'DORA and vendor risk hiring', 'DORA programs in annual reports', 'Incidents at peer banks'],
+      outcomes: [
+        "Reps stop emailing banks that aren't ready and focus on the ones with an open project.",
+        'Conversations start while the requirements are still being written, before any tender.',
+        'Every first message names a reason the buyer recognizes, so the right people reply.',
+      ],
     },
-    outcomes: [
-      'Conversations start before the RFP, while requirements are still open.',
-      'Every first message carries a reason the buyer recognizes.',
-      'Reps spend their week on accounts with an active trigger, not on cold logos.',
-    ],
   },
   {
     id: 'b2b-software',
@@ -122,16 +113,6 @@ export const industries: Industry[] = [
     accent: 'indigo',
     visual: 'bars',
     moment: 'Companies replace tools when they grow, reorganize or bring in a new leader.',
-    title: 'Find companies that just outgrew their tools',
-    summary:
-      "Growth breaks processes. When a company raises money, hires quickly or brings in a new leader, the tools that worked last year stop fitting. We find those moments across your market, so you reach buyers while they're open to change.",
-    problem:
-      "Most SaaS outbound targets companies that match a profile, not companies that are ready to buy. A perfect fit that just renewed with a competitor isn't a lead. A smaller company that's building a whole new team is. Without timing, reps burn through the list and the market learns to ignore the emails.",
-    pains: [
-      'Lists built on company size and industry alone, with no sense of timing.',
-      'Tool changes discovered after the decision is made.',
-      'Sequences that sound like every other vendor in the inbox.',
-    ],
     signals: [
       { label: 'Funding rounds', why: 'New money comes with a plan to scale, and the tools to support it.' },
       {
@@ -146,32 +127,22 @@ export const industries: Industry[] = [
         label: 'Tech stack changes',
         why: "Job posts and public docs show which tools a company runs, and when it's replacing one.",
       },
-      { label: 'Expansion into new markets', why: 'New offices and regions mean new teams to equip and new processes.' },
     ],
-    buyers: [
-      'Head of the team your product serves',
-      'Operations and RevOps leaders',
-      'CFO or finance lead',
-      'IT and security reviewers',
-    ],
-    steps: [
-      'We start from your best customers and the moments that came before they bought.',
-      'We watch funding, leadership changes, hiring and stack changes across every company that fits.',
-      'You get a short weekly list of accounts in a buying window, each with the person to contact and a first message.',
-    ],
-    brief: {
-      account: 'A logistics software company after its Series B',
-      signal: 'Hired a new VP of Sales and posted roles for a full SDR team.',
-      whyNow: 'A new sales leader is building a team from scratch and choosing the tools it will run on.',
-      contact: 'VP of Sales, recently appointed',
-      opener:
-        "Congrats on the new role. Teams that hire this quickly usually find the current setup doesn't scale with them. Is the stack for the new SDR team already decided, or still open?",
+    buyers: ['Head of the team your product serves', 'Operations and RevOps leaders', 'CFO or finance lead'],
+    useCase: {
+      title: 'Reaching finance teams as they outgrow spreadsheets',
+      company: 'A SaaS company that sells spend management software to mid-sized businesses.',
+      problem:
+        "The SDR team prospects every company in the right size band. Most of them are happy with what they have, and the ones that are ready to switch have usually started a trial with a competitor before anyone calls. Nobody can see which companies are outgrowing their finance setup right now.",
+      solution:
+        "We look for the moments that break a finance team's setup: a funding round, a new CFO or finance director, a jump in finance hiring and new entities in other countries. Every week the SDRs get the companies where this just happened, with the finance leader to contact and an opening line about their situation.",
+      signals: ['Funding rounds', 'New CFO or finance director', 'Finance team hiring', 'New entities abroad'],
+      outcomes: [
+        'SDRs work a short list of companies with a reason to change, not the whole size band.',
+        "Conversations start before a competitor's trial does.",
+        "Opening lines talk about the buyer's situation, not the product's features.",
+      ],
     },
-    outcomes: [
-      'Reps work fewer accounts, each with a reason to reach out now.',
-      "Outreach starts from the buyer's situation, not from your feature list.",
-      "You hear about tool changes while they're being decided.",
-    ],
   },
   {
     id: 'it-services',
@@ -181,16 +152,6 @@ export const industries: Industry[] = [
     accent: 'sky',
     visual: 'circuit',
     moment: "IT projects are announced long before they're staffed: moves, mergers, migrations and new leaders.",
-    title: 'Be the partner in place before the project starts',
-    summary:
-      "Office moves, acquisitions, cloud migrations and new IT leaders all create work that an in-house team can't absorb. We spot those projects early, so you're talking to the buyer while they're still deciding who to bring in.",
-    problem:
-      'IT services are bought at moments of change, and those moments are short. Once a company picks a partner for a migration or an integration, it stays with them for the life of the project. Referrals and inbound only cover part of the market, and cold outreach without a project to point to rarely gets a reply.',
-    pains: [
-      'Projects are already awarded by the time you hear about them.',
-      "Outbound lists your capabilities instead of the buyer's project.",
-      'No way to see which companies in your region are about to change.',
-    ],
     signals: [
       { label: 'Mergers and acquisitions', why: 'Two companies joining means systems, networks and teams to bring together.' },
       { label: 'Office moves and new sites', why: 'New locations need networks, devices and support from the first day.' },
@@ -199,30 +160,22 @@ export const industries: Industry[] = [
         why: 'Mentions in job posts, earnings calls or the news point to a migration being planned.',
       },
       { label: 'New IT leadership', why: 'A new CIO or IT Director often reviews outside partners early on.' },
-      {
-        label: 'Tenders and frameworks',
-        why: 'Public bodies and large companies publish projects you can bid for, often with short deadlines.',
-      },
     ],
-    buyers: ['Chief Information Officer', 'IT Director', 'Head of Infrastructure', 'Operations lead for moves and new sites'],
-    steps: [
-      'You set the regions, company sizes and services you want to grow.',
-      'We track deals, moves, migrations, IT leadership changes and published tenders across that market.',
-      'Each account arrives with the project behind it, the people who own it and an opening line about their project.',
-    ],
-    brief: {
-      account: 'A regional healthcare group',
-      signal: "Announced it's acquiring a group of clinics and is hiring an infrastructure lead.",
-      whyNow: 'New sites have to join one network and one helpdesk, and that work is being scoped now.',
-      contact: 'IT Director',
-      opener:
-        'Congratulations on the acquisition. Bringing new sites onto one network and helpdesk is usually the first project after a deal like this. Is that already planned, or still being scoped?',
+    buyers: ['Chief Information Officer', 'IT Director', 'Head of Infrastructure'],
+    useCase: {
+      title: 'Getting into acquisitions before the IT work is awarded',
+      company: 'A managed service provider that runs networks, devices and helpdesk for multi-site businesses.',
+      problem:
+        "The provider's best projects come from acquisitions: two companies merge and suddenly need one network, one helpdesk and one set of devices. But the team usually hears about a deal months later, after the buyer's existing IT partner has been handed the integration.",
+      solution:
+        'We track acquisitions, new sites and IT leadership changes among multi-site businesses in their region. When a deal is announced, they get the account the same week, with the IT owner on the buying side and a message about bringing the new sites together.',
+      signals: ['Mergers and acquisitions', 'New sites and office moves', 'New IT leadership', 'Infrastructure hiring'],
+      outcomes: [
+        "They're in the conversation while the integration is still being scoped.",
+        "Outreach is about the buyer's project, not a list of services.",
+        "Their pipeline follows what's changing in their region.",
+      ],
     },
-    outcomes: [
-      "You're in the conversation while the project is still being shaped.",
-      'Every first call is about a real project, not a service list.',
-      'Your pipeline reflects what is happening in your region this quarter.',
-    ],
   },
   {
     id: 'logistics',
@@ -232,16 +185,6 @@ export const industries: Industry[] = [
     accent: 'amber',
     visual: 'map',
     moment: 'New warehouses, routes and regions are planned in public: permits, job posts and press releases.',
-    title: 'Get in before the new warehouse goes live',
-    summary:
-      'Logistics companies announce growth long before it opens: planning permits, site announcements and waves of operations hiring. We track those signals so you can help shape the systems for a new site, instead of competing to replace them later.',
-    problem:
-      "Warehouse and transport systems are chosen while a site is being planned, then kept for years. Reach the operations team after go-live and you're asking them to rip out something new. The window is the time between the announcement and the opening, and most vendors miss it because the signals are scattered across local news, permit filings and job boards.",
-    pains: [
-      'Site projects discovered after the systems are chosen.',
-      'Signals scattered across local news, permits and job boards.',
-      'Outreach to head office that never reaches the people running the new site.',
-    ],
     signals: [
       { label: 'New distribution centers', why: 'Announced sites and planning permits show where capacity is being added.' },
       { label: 'Operations hiring', why: 'A wave of roles for a new location reveals the timeline and the team.' },
@@ -253,30 +196,22 @@ export const industries: Industry[] = [
         label: 'Systems in transition',
         why: 'Job posts that mention a WMS, TMS or automation project point to an active evaluation.',
       },
-      {
-        label: 'New operations leadership',
-        why: 'A new COO or head of logistics tends to revisit the network and the tools behind it.',
-      },
     ],
-    buyers: ['VP or Head of Operations', 'Director of Logistics', 'Site and General Managers', 'Supply chain systems lead'],
-    steps: [
-      'We map the shippers, 3PLs and carriers you can serve, by region and by type of operation.',
-      'We follow permits, site announcements, operations hiring and systems projects across them.',
-      'You get each site project with its timeline, the operations leaders behind it and a first message.',
-    ],
-    brief: {
-      account: 'A national food distributor',
-      signal: 'Filed plans for a new cold-storage distribution center and posted roles for its launch team.',
-      whyNow: 'Systems for the new site are chosen before the launch team starts.',
-      contact: 'Director of Logistics',
-      opener:
-        'Saw the plans for the new cold-storage site. Teams in your position usually lock in their warehouse systems well before the first hires start. Have you chosen yours yet?',
+    buyers: ['VP or Head of Operations', 'Director of Logistics', 'Site and General Managers'],
+    useCase: {
+      title: 'Selling warehouse software before the new site opens',
+      company: 'A warehouse management software provider that sells to food and retail distributors.',
+      problem:
+        "Distributors choose their warehouse system while a new site is being planned, then keep it for years. This provider usually learns about new sites from the opening press release, when the system is already live and nobody has a reason to change it.",
+      solution:
+        'We follow planning applications, site announcements and the operations hiring that comes before a new distribution center opens. The team gets each project early, with its expected timeline, the operations leaders behind it and a message about the new site.',
+      signals: ['Planning applications', 'New distribution centers', 'Operations hiring', 'New operations leadership'],
+      outcomes: [
+        'They help choose the systems for new sites instead of trying to replace them later.',
+        'They hear about projects that never make a press release.',
+        'Outreach reaches the people running the new site, not just head office.',
+      ],
     },
-    outcomes: [
-      'You help design the systems for new sites instead of displacing them later.',
-      'Your team hears about projects that never reach a press release.',
-      'Outreach goes to the people running the operation, not just head office.',
-    ],
   },
   {
     id: 'fintech',
@@ -286,16 +221,6 @@ export const industries: Industry[] = [
     accent: 'violet',
     visual: 'waves',
     moment: 'Finance stacks change when a company enters new markets, raises capital or brings in a new CFO.',
-    title: 'Meet finance teams as they expand into new markets',
-    summary:
-      'New countries mean new currencies, entities, tax rules and payment methods. We find companies at that point of expansion, along with the finance leaders who have to make it work.',
-    problem:
-      "Finance software is sticky. Most companies only revisit payments, billing or accounting tools when the current setup breaks, and expansion is when it breaks. If you aren't talking to the CFO while the new entity is being set up, the decision gets made with whatever is already in place.",
-    pains: [
-      'Expansion plans discovered after the finance setup is chosen.',
-      'Reaching the wrong person: marketing announces the expansion, finance makes the call.',
-      'Messages about features instead of the problem the buyer has this quarter.',
-    ],
     signals: [
       {
         label: 'Expansion into new countries',
@@ -303,28 +228,23 @@ export const industries: Industry[] = [
       },
       { label: 'Funding rounds', why: 'New capital comes with investor reporting, tighter controls and a plan to scale.' },
       { label: 'New finance leadership', why: 'A new CFO or controller often reviews the finance stack in their first year.' },
-      { label: 'Finance hiring', why: 'Roles in treasury, billing or accounting operations show what is being built.' },
-      { label: 'Licensing and regulatory news', why: 'New licenses or rules can force changes to how money moves.' },
+      { label: 'Finance hiring', why: "Roles in treasury, billing or accounting operations show what's being built." },
     ],
-    buyers: ['Chief Financial Officer', 'Financial Controller', 'Head of Finance Operations', 'Head of Payments'],
-    steps: [
-      'We define the companies that fit your product by business model, region and stage.',
-      'We watch expansions, funding, finance hiring and leadership changes across that market.',
-      'You get each account with the finance leader to contact and a message about their expansion.',
-    ],
-    brief: {
-      account: 'A subscription software company',
-      signal: 'Opened new entities in Europe and is hiring a billing operations lead.',
-      whyNow: 'Billing has to handle new currencies and tax rules this quarter.',
-      contact: 'Head of Finance Operations',
-      opener:
-        'Congrats on the European launch. Adding entities usually means new currencies and tax rules in billing at the same time. Is the current setup ready for that, or is it on the list?',
+    buyers: ['Chief Financial Officer', 'Financial Controller', 'Head of Payments'],
+    useCase: {
+      title: 'Meeting finance teams before they launch in a new country',
+      company: 'A payments company that handles multi-currency billing and payouts for online businesses.',
+      problem:
+        "Online businesses only rethink payments when they expand abroad, and the window is short. By the time a company announces it's live in a new country, the payments setup for that market is decided, usually by stretching whatever they use at home.",
+      solution:
+        'We watch for the early signs of expansion: new entities in company registries abroad, international roles in job posts, funding raised for new markets and new finance leaders. The team gets each company before launch, with the head of finance or payments and a message about the new market.',
+      signals: ['New entities abroad', 'International hiring', 'Funding for expansion', 'New finance leadership'],
+      outcomes: [
+        "They're talking to finance while the new market's setup is still open.",
+        'Messages speak to the expansion the buyer is planning.',
+        'Fewer calls to companies that are happy with what they have.',
+      ],
     },
-    outcomes: [
-      'You reach finance leaders while the new setup is being designed.',
-      "Your message speaks to the expansion they're living through.",
-      'Fewer cold calls to companies that are happy with their current stack.',
-    ],
   },
   {
     id: 'hr-staffing',
@@ -334,16 +254,6 @@ export const industries: Industry[] = [
     accent: 'emerald',
     visual: 'skyline',
     moment: 'Hiring tells you who is growing, which teams are growing and how fast.',
-    title: 'Find companies hiring faster than their HR team can keep up',
-    summary:
-      'When open roles pile up, the people team is stretched first. We track hiring surges, new offices and new HR leaders, so you reach companies when recruiting, onboarding and HR tools are under the most pressure.',
-    problem:
-      "Every company says it's hiring. What matters is a sudden change: a burst of open roles, a new location to staff or a new people leader with a mandate. Those changes show up on public job boards every day, but no one has time to watch them across thousands of companies and spot the ones that matter.",
-    pains: [
-      'Prospecting companies that hire steadily instead of the ones that just started scaling.',
-      'Finding out about a new office after the recruiting partner is chosen.',
-      "Generic outreach that ignores the roles they're actually trying to fill.",
-    ],
     signals: [
       { label: 'Hiring surges', why: 'A sharp rise in open roles shows a team or a whole company scaling.' },
       { label: 'New offices and locations', why: 'A new site has to be staffed from scratch, often on a tight timeline.' },
@@ -352,30 +262,22 @@ export const industries: Industry[] = [
         why: 'New heads of people often review recruiting partners and HR systems early.',
       },
       { label: 'Funding rounds', why: 'Fresh capital usually turns into a hiring plan within months.' },
-      {
-        label: 'Restructuring news',
-        why: 'Reorganizations create demand for outplacement, contractors and new tools.',
-      },
     ],
-    buyers: ['Chief People Officer', 'Head of Talent Acquisition', 'HR Director', 'Hiring managers in the growing team'],
-    steps: [
-      'We agree the company sizes, sectors and roles where you win.',
-      'We track open roles, new locations, people leadership changes and funding across that market every day.',
-      "You get each account with the roles they're trying to fill, who owns hiring and a first message.",
-    ],
-    brief: {
-      account: 'A fast-growing engineering consultancy',
-      signal: 'Opened a new office and posted roles for most of its teams there.',
-      whyNow: 'The new office has to be staffed quickly, and the hiring plan is being set now.',
-      contact: 'Head of Talent Acquisition',
-      opener:
-        'Saw the new office and the roles going up for it. Filling a new site at that pace is hard to do with an in-house team alone. How are you planning to staff it?',
+    buyers: ['Chief People Officer', 'Head of Talent Acquisition', 'HR Director'],
+    useCase: {
+      title: 'Reaching a hiring push before every agency calls',
+      company: 'A recruitment agency that fills technical roles for engineering and IT teams.',
+      problem:
+        'Recruiters spend their mornings scrolling job boards for leads. By the time a role is posted, other agencies are calling the same hiring manager, and the company has often picked its recruiting partners for the year.',
+      solution:
+        "We flag companies about to hire at scale: new offices, funding rounds, a sharp rise in open roles and a new head of talent. Recruiters get each company with the roles it's hiring for and the person who owns hiring, at the start of the push.",
+      signals: ['New offices', 'Funding rounds', 'Hiring surges', 'New head of talent'],
+      outcomes: [
+        'Recruiters reach companies at the start of a hiring push, not the end of it.',
+        "Every call is about the roles the company is actually hiring for.",
+        'Less time on job boards, more time with hiring managers.',
+      ],
     },
-    outcomes: [
-      'You reach companies at the start of a hiring push, not the end of it.',
-      "Every message names the roles they're hiring for.",
-      'Your team stops chasing companies with no open need.',
-    ],
   },
   {
     id: 'healthcare',
@@ -385,16 +287,6 @@ export const industries: Industry[] = [
     accent: 'teal',
     visual: 'pulse',
     moment: 'Health systems buy around new sites, new leaders, public funding and system upgrades.',
-    title: 'Time your outreach to how health systems really buy',
-    summary:
-      'Hospital buying is slow and run by committee, but it follows visible events: new clinics, leadership appointments, grants and system upgrades. We track them so you can start conversations early and reach every member of the buying group.',
-    problem:
-      "Healthcare sales cycles are long and the buying group is large. Vendors that wait for a tender end up competing on price against requirements they didn't help shape. The teams that win are in conversation months earlier, when a new site is planned or a new leader is setting priorities.",
-    pains: [
-      'Learning about projects at the tender stage.',
-      'Deals that stall when the one contact you have moves on.',
-      'Little visibility into which organizations have budget this year.',
-    ],
     signals: [
       { label: 'New hospitals and clinics', why: 'New sites need systems, devices and services, chosen well before opening.' },
       { label: 'Leadership appointments', why: 'New CIOs, CMIOs and service line leaders bring new priorities.' },
@@ -403,35 +295,22 @@ export const industries: Industry[] = [
         label: 'System upgrades and migrations',
         why: 'Replacing a patient records system or another core platform pulls in integration, training and services.',
       },
-      {
-        label: 'Tenders and early market notices',
-        why: 'Published tenders and early market engagement notices show what is coming next.',
-      },
     ],
-    buyers: [
-      'Chief Information Officer',
-      'Chief Medical Information Officer',
-      'Director of Operations',
-      'Procurement lead',
-    ],
-    steps: [
-      'We map the hospitals, clinic groups and health systems that fit your product.',
-      'We follow new sites, appointments, funding awards, system upgrades and tender notices across them.',
-      'You get each account with the members of the buying group to reach and a first message for each.',
-    ],
-    brief: {
-      account: 'A regional hospital network',
-      signal: 'Received public funding to modernize patient records and appointed a new CMIO.',
-      whyNow: 'Integration partners for the records program are chosen early.',
-      contact: 'Chief Medical Information Officer, recently appointed',
-      opener:
-        'Congratulations on the funding for the records program. Projects like this usually choose integration partners early. Who is leading that work on your side?',
+    buyers: ['Chief Information Officer', 'Chief Medical Information Officer', 'Procurement lead'],
+    useCase: {
+      title: 'Reaching hospitals while the records program is being planned',
+      company: 'A company that sells integration software connecting hospital systems to their patient records platform.',
+      problem:
+        'Hospitals buy integration tools as part of bigger programs, such as a move to a new patient records system. The team usually learns about those programs when a tender is published, and by then the requirements favor vendors who have been talking to the hospital for months.',
+      solution:
+        'We track funding awards for digital programs, new patient records projects, appointments of clinical information leaders and early market engagement notices. The team gets each hospital as soon as a program is funded or announced, with the clinical and IT leaders to contact.',
+      signals: ['Funding for digital programs', 'Patient records projects', 'New CIO or CMIO', 'Early market notices'],
+      outcomes: [
+        "They're in the conversation before the tender is written.",
+        'They reach the whole buying group, clinical and technical.',
+        'Their pipeline is built around funded programs, not cold lists.',
+      ],
     },
-    outcomes: [
-      "You're part of the conversation before the tender is written.",
-      'Deals involve the whole buying group, not a single contact.',
-      'Your team focuses on organizations with funded projects this year.',
-    ],
   },
   {
     id: 'industrial',
@@ -441,16 +320,6 @@ export const industries: Industry[] = [
     accent: 'orange',
     visual: 'blueprint',
     moment: 'Plants announce investment long before they buy: new lines, permits, grants and plant leadership.',
-    title: 'Get specified into new plants before the tender',
-    summary:
-      "Manufacturers announce new plants, lines and expansions well ahead of purchasing. We follow those announcements, permits and hiring waves, so you're part of the design conversation instead of a line in a tender.",
-    problem:
-      'In manufacturing, the important decisions are made at the design stage. Equipment, automation and suppliers are specified long before a purchase order goes out. By the time a tender is published, the specification often favors whoever helped write it.',
-    pains: [
-      'Capital projects found at the purchasing stage.',
-      'Reaching procurement instead of the engineers who write the specification.',
-      'No view of which plants are investing this year.',
-    ],
     signals: [
       {
         label: 'New plants and production lines',
@@ -462,35 +331,69 @@ export const industries: Industry[] = [
       },
       {
         label: 'Engineering and operations hiring',
-        why: 'Roles for plant engineers or automation specialists reveal what is being built.',
+        why: "Roles for plant engineers or automation specialists reveal what's being built.",
       },
       {
         label: 'Plant leadership changes',
         why: 'A new plant manager or operations director often arrives with an improvement plan.',
       },
+    ],
+    buyers: ['Plant Manager', 'Head of Engineering', 'Operations Director'],
+    useCase: {
+      title: 'Getting into a new production line at the design stage',
+      company: 'An automation supplier that designs conveyor and robotics systems for packaging plants.',
+      problem:
+        "Plant automation is specified by engineers long before purchasing gets involved. This supplier mostly meets new projects as published tenders, competing on price against a specification written around another vendor's equipment.",
+      solution:
+        'We follow investment announcements, planning permits, capacity and energy grants, and hiring for automation and process engineers at packaging plants. The supplier gets each project at the design stage, with the engineers who write the specification.',
+      signals: ['New production lines', 'Planning permits', 'Engineering hiring', 'Investment grants'],
+      outcomes: [
+        'They help shape the specification instead of bidding against it.',
+        'First conversations are with the engineers who decide.',
+        'Their pipeline follows the plants that are investing this year.',
+      ],
+    },
+  },
+  {
+    id: 'erp-testing',
+    name: 'ERP testing',
+    audience: 'test automation and QA service companies that work on SAP, Oracle, Microsoft Dynamics and other ERP systems.',
+    icon: 'erp',
+    accent: 'fuchsia',
+    visual: 'modules',
+    moment: 'Testing work spikes around migrations, upgrades and release cycles, and most of them are planned in public.',
+    signals: [
       {
-        label: 'Energy and emissions targets',
-        why: 'Commitments to cut energy use or emissions drive upgrades to equipment and processes.',
+        label: 'ERP migrations and go-lives',
+        why: 'A move to S/4HANA, Oracle Cloud or Dynamics 365 means months of testing against a fixed go-live date.',
+      },
+      {
+        label: 'Release and update cycles',
+        why: 'Cloud ERPs ship updates on a fixed schedule, and every release needs regression testing.',
+      },
+      {
+        label: 'ERP and testing hiring',
+        why: 'Job posts for SAP consultants, test managers or automation engineers show a program is underway.',
+      },
+      {
+        label: 'System integrator partnerships',
+        why: 'When a company names its implementation partner, the testing plan is being set.',
       },
     ],
-    buyers: ['Plant Manager', 'Head of Engineering', 'Operations Director', 'Procurement and sourcing lead'],
-    steps: [
-      'We define the plants and manufacturers you can serve, by process, region and size.',
-      'We follow investment news, permits, incentives, engineering hiring and leadership changes across them.',
-      'You get each project with its stage, the engineers and plant leaders to reach and a first message.',
-    ],
-    brief: {
-      account: 'A packaging manufacturer',
-      signal: 'Announced a new production line and is hiring automation engineers for the project.',
-      whyNow: 'Automation for the new line is being specified before procurement gets involved.',
-      contact: 'Head of Engineering',
-      opener:
-        'Saw the announcement about the new line. Teams at this stage usually finalize automation specs before procurement gets involved. Is that work underway?',
+    buyers: ['ERP program manager', 'Head of QA or test manager', 'Chief Information Officer'],
+    useCase: {
+      title: 'Reaching SAP customers before their S/4HANA testing is planned',
+      company: 'A test automation company that helps businesses test their SAP systems through upgrades and migrations.',
+      problem:
+        "SAP ends mainstream maintenance for ECC at the end of 2027, so many SAP customers are planning a move to S/4HANA, and each move needs months of testing. The company's reps know the market is large but can't tell who is starting now, so they call the same SAP users as every other vendor and mostly reach companies that are years away or already committed to a testing partner.",
+      solution:
+        'We track the signals that show a migration is starting: S/4HANA roles in job posts, system integrator partnerships, migration programs named in annual reports and new ERP leaders. Every week the reps get the companies moving now, with the program manager or test lead and a message about their migration timeline.',
+      signals: ['S/4HANA hiring', 'System integrator partnerships', 'Migration programs in annual reports', 'New ERP leadership'],
+      outcomes: [
+        'Reps reach companies as their migration starts, not years before or after.',
+        'Testing comes up while the plan is still being written, not after a go-live slips.',
+        "Every message names the buyer's program and timeline.",
+      ],
     },
-    outcomes: [
-      'You help shape the specification instead of bidding against it.',
-      'Your first conversation is with the engineers who decide.',
-      'Your pipeline follows the plants that are investing right now.',
-    ],
   },
 ];

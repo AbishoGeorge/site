@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, BadgeCheck, Banknote, Check, Clock3, FileCheck2, Loader2, Mail, Radar, UserRoundCheck } from 'lucide-react';
 import { brand } from '../../brand';
-import FloatField from '../overlay/FloatField';
+import FloatField, { FloatTextArea } from '../overlay/FloatField';
 import OverlayShell from '../overlay/OverlayShell';
 import { useHashOverlay } from '../overlay/useHashOverlay';
 import { submitLead, type LeadResult } from '../overlay/lead';
@@ -17,6 +17,10 @@ const reasons = [
   { icon: UserRoundCheck, title: 'Who to reach first', text: 'The decision makers, and what to say to them.' },
 ];
 const teamSizes = ['Just me', '2-10', '11-50', '51-200', '200+'];
+
+// Personal email providers: with one of these we can't tell the company from the email, so we ask for the website.
+const PERSONAL_MAIL =
+  /^(gmail|googlemail|yahoo|ymail|outlook|hotmail|live|msn|icloud|me|mac|aol|proton|protonmail|pm|gmx|mail|yandex|zoho|zohomail|rediffmail)\./;
 
 const rise = (delay: number) => ({
   initial: { opacity: 0, y: 16 },
@@ -109,29 +113,31 @@ function DemoForm() {
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
   const [team, setTeam] = useState('');
+  const [message, setMessage] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [websiteError, setWebsiteError] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | LeadResult>('idle');
 
-  // Suggest the website from a work email once one is typed.
-  useEffect(() => {
-    if (website) return;
-    const domain = email.split('@')[1];
-    if (domain && toDomain(domain) && !/^(gmail|yahoo|outlook|hotmail|icloud|proton)\./.test(domain))
-      setWebsite(domain);
-    // Only react to the email changing; an edited website is left alone.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email]);
+  // The company comes from the work email. Only a personal address needs the website asked for separately.
+  const emailDomain = toDomain(email.split('@')[1] ?? '');
+  const personal = !!emailDomain && PERSONAL_MAIL.test(emailDomain);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!e.currentTarget.reportValidity()) return;
-    const domain = toDomain(website);
+    if (!emailDomain) {
+      setEmailError('Enter your work email, like name@yourcompany.com');
+      return;
+    }
+    const domain = personal ? toDomain(website) : emailDomain;
     if (!domain) {
       setWebsiteError('Enter a website like yourcompany.com');
       return;
     }
     setStatus('sending');
-    setStatus(await submitLead('demo', { Name: name, Email: email, Website: domain, 'Team size': team }));
+    setStatus(
+      await submitLead('demo', { Name: name, Email: email, Website: domain, 'Team size': team, Message: message.trim() })
+    );
   };
 
   if (status === 'sent' || status === 'email') {
@@ -177,24 +183,41 @@ function DemoForm() {
           label="Work email"
           type="email"
           value={email}
-          onChange={setEmail}
-          autoComplete="email"
-          required
-        />
-        <FloatField
-          id="demo-website"
-          label="Company website"
-          value={website}
           onChange={(v) => {
-            setWebsite(v);
-            if (websiteError) setWebsiteError('');
+            setEmail(v);
+            if (emailError) setEmailError('');
           }}
-          inputMode="url"
-          autoComplete="url"
-          placeholder="yourcompany.com"
-          error={websiteError}
+          autoComplete="email"
+          error={emailError}
           required
         />
+        <AnimatePresence initial={false}>
+          {personal && (
+            <motion.div
+              key="website"
+              // Clipped only while it opens or closes, so the focus ring isn't cut off.
+              initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+              animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
+              exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <FloatField
+                id="demo-website"
+                label="Company website"
+                value={website}
+                onChange={(v) => {
+                  setWebsite(v);
+                  if (websiteError) setWebsiteError('');
+                }}
+                inputMode="url"
+                autoComplete="url"
+                placeholder="yourcompany.com"
+                error={websiteError}
+                required
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Optional, so phones skip it to keep the form on one screen. */}
         <fieldset className="hidden sm:block">
           <legend className="text-sm font-medium text-slate-800">
@@ -218,6 +241,13 @@ function DemoForm() {
             ))}
           </div>
         </fieldset>
+        <FloatTextArea
+          id="demo-message"
+          label="How can we help? (optional)"
+          value={message}
+          onChange={setMessage}
+          placeholder="Your questions or goals"
+        />
       </div>
 
       <button

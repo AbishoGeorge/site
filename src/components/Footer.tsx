@@ -5,20 +5,18 @@ import Logo from './Logo';
 
 const columns = [
   {
-    title: 'Product',
+    title: 'Explore',
     links: [
-      { href: '#industries', label: 'Industries' },
-      { href: '#live-accounts', label: 'Active targets' },
-      { href: '#what-you-get', label: 'What you get' },
-      { href: `#${TOP_ACCOUNTS_HASH}`, label: 'See my top accounts' },
+      { href: '#top', label: 'Home' },
+      { href: '#use-cases', label: 'Use cases' },
+      { href: '#about', label: 'About' },
+      { href: '#faq', label: 'FAQ' },
     ],
   },
   {
-    title: 'Company',
+    title: 'Get started',
     links: [
-      { href: '#use-cases', label: 'Use cases' },
-      { href: '#about', label: 'Who we are' },
-      { href: '#faq', label: 'FAQ' },
+      { href: `#${TOP_ACCOUNTS_HASH}`, label: 'See my top accounts' },
       { href: demoHref, label: 'Book a demo' },
     ],
   },

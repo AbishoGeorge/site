@@ -1,41 +1,38 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, Menu, X } from 'lucide-react';
+import { ArrowUpRight, Menu, Search, X } from 'lucide-react';
 import { brand, demoHref, demoLinkProps } from '../brand';
+import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 import Logo from './Logo';
 
 const links = [
-  { href: '#industries', label: 'Industries' },
-  { href: '#live-accounts', label: 'Active targets' },
+  { href: '#top', label: 'Home' },
   { href: '#use-cases', label: 'Use cases' },
   { href: '#about', label: 'About' },
   { href: '#faq', label: 'FAQ' },
-  { href: '#top-accounts', label: 'See my top accounts' },
 ];
+
+// Sections with their own link; every other section of the page counts as Home, and the closing call to action
+// highlights nothing.
+const linkFor = (sectionId: string) =>
+  sectionId === 'contact' ? '' : (links.find((l) => l.href === `#${sectionId}`)?.href ?? '#top');
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [current, setCurrent] = useState('');
+  const [current, setCurrent] = useState('#top');
 
   // Highlight the link for the section in the middle of the screen.
   useEffect(() => {
-    const sections = links
-      .map((l) => document.getElementById(l.href.slice(1)))
-      .filter((el): el is HTMLElement => !!el);
+    const sections = [...document.querySelectorAll<HTMLElement>('main > section[id]')];
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) setCurrent(`#${e.target.id}`);
+        for (const e of entries) if (e.isIntersecting) setCurrent(linkFor(e.target.id));
       },
       { rootMargin: '-45% 0px -50% 0px' }
     );
     sections.forEach((el) => io.observe(el));
-    const onTop = () => window.scrollY < 200 && setCurrent('');
-    window.addEventListener('scroll', onTop, { passive: true });
-    return () => {
-      io.disconnect();
-      window.removeEventListener('scroll', onTop);
-    };
+    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
@@ -48,7 +45,7 @@ export default function Navbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4">
       <nav
-        className={`mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full pl-4 pr-2 ring-1 transition-all duration-300 sm:pl-5 ${
+        className={`mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 rounded-full pl-4 pr-2 ring-1 transition-all duration-300 sm:pl-5 ${
           scrolled || open
             ? 'bg-white/80 shadow-lg shadow-indigo-900/5 ring-indigo-100 backdrop-blur-xl'
             : 'bg-white/60 ring-white/80 backdrop-blur-md'
@@ -64,7 +61,7 @@ export default function Navbar() {
               key={l.href}
               href={l.href}
               aria-current={current === l.href ? 'location' : undefined}
-              className={`rounded-full px-3.5 py-2 text-sm font-medium transition-colors hover:bg-indigo-50 hover:text-slate-900 ${
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-indigo-50 hover:text-slate-900 ${
                 current === l.href ? 'bg-indigo-50 text-slate-900' : 'text-slate-600'
               }`}
             >
@@ -73,16 +70,25 @@ export default function Navbar() {
           ))}
         </div>
 
-        <a
-          href={demoHref}
-          {...demoLinkProps}
-          className="group hidden items-center gap-2 rounded-full bg-slate-900 py-2 pl-4 pr-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 lg:inline-flex"
-        >
-          Book a demo
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 transition-transform duration-300 group-hover:rotate-45">
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </span>
-        </a>
+        <div className="hidden items-center gap-2 lg:flex">
+          <a
+            href={`#${TOP_ACCOUNTS_HASH}`}
+            className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-800 ring-1 ring-indigo-200 transition-colors hover:bg-indigo-50 hover:ring-indigo-300"
+          >
+            <Search className="h-4 w-4 text-indigo-600" />
+            See my top accounts
+          </a>
+          <a
+            href={demoHref}
+            {...demoLinkProps}
+            className="group inline-flex items-center gap-2 rounded-full bg-slate-900 py-2 pl-4 pr-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          >
+            Book a demo
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 transition-transform duration-300 group-hover:rotate-45">
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </span>
+          </a>
+        </div>
 
         <button
           type="button"
@@ -114,14 +120,24 @@ export default function Navbar() {
                 {l.label}
               </a>
             ))}
-            <a
-              href={demoHref}
-              {...demoLinkProps}
-              onClick={() => setOpen(false)}
-              className="mt-2 block rounded-full bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white"
-            >
-              Book a demo
-            </a>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <a
+                href={`#${TOP_ACCOUNTS_HASH}`}
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-indigo-200"
+              >
+                <Search className="h-4 w-4 text-indigo-600" />
+                See my top accounts
+              </a>
+              <a
+                href={demoHref}
+                {...demoLinkProps}
+                onClick={() => setOpen(false)}
+                className="block rounded-full bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white"
+              >
+                Book a demo
+              </a>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

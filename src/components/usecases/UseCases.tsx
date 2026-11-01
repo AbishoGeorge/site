@@ -14,7 +14,7 @@ export default function UseCases() {
           See how it works in your market
         </h2>
         <p className="max-w-md text-slate-600">
-          Each use case covers the problem teams run into, the signals that solve it and what lands in your inbox.
+          One company, one specific problem, and how buying signals solve it. Pick your market to read the story.
         </p>
       </div>
 
@@ -55,7 +55,9 @@ function UseCaseCard({ industry, tabIndex }: { industry: Industry; tabIndex?: nu
           <span className="text-sm font-semibold text-white/90">{industry.name}</span>
         </span>
         <div>
-          <p className="font-display text-2xl font-bold leading-tight tracking-tight sm:text-[1.65rem]">{industry.title}</p>
+          <p className="font-display text-2xl font-bold leading-tight tracking-tight sm:text-[1.65rem]">
+            {industry.useCase.title}
+          </p>
           <span className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-white/70 transition-all duration-300 group-hover:gap-2.5 group-hover:text-white">
             Read the use case
             <ArrowRight className="h-4 w-4" />

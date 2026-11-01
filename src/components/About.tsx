@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, FileCheck2, Target, Timer, UsersRound } from 'lucide-react';
+import { ArrowUpRight, FileCheck2, Timer, UsersRound } from 'lucide-react';
 import { brand, demoHref, demoLinkProps } from '../brand';
 
-// Mission and principles. Add your own story here: when and why you started, who is on the team, where you work.
+// What we stand for. Add your own story here when you're ready: when and why you started, the team, where you work.
 const principles = [
   {
     icon: FileCheck2,
@@ -19,64 +19,103 @@ const principles = [
     title: 'People, not just companies',
     text: 'We find who to talk to and what to say, so the first message lands.',
   },
-  {
-    icon: Target,
-    title: 'Built around your buyer',
-    text: 'Your list follows your ideal customer and the triggers behind your best deals.',
-  },
 ];
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function About() {
   return (
     <section id="about" className="scroll-mt-24 px-2 py-10 sm:px-4 sm:py-14">
-      <div className="mx-auto max-w-[1600px] rounded-[28px] bg-[#f4f5ff] px-6 py-16 ring-1 ring-indigo-100 sm:px-10 sm:py-20 lg:px-16">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-16">
+      <div className="relative isolate mx-auto max-w-[1600px] overflow-hidden rounded-[28px] bg-[#0c0a24] px-6 py-16 text-white sm:px-10 sm:py-24 lg:px-16">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-40 -top-40 -z-10 h-[520px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(99,102,241,0.38),transparent)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-56 -right-24 -z-10 h-[560px] w-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(249,115,22,0.16),transparent)]"
+        />
+        <GlobeLines className="pointer-events-none absolute -right-24 top-10 -z-10 hidden h-[560px] w-[560px] text-indigo-200/20 lg:block" />
+
+        <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.6, ease }}
+            className="max-w-3xl"
           >
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Who we are</h2>
-            <p className="mt-6 text-xl leading-relaxed text-slate-800 sm:text-2xl">
-              {brand.name} exists so sales teams can spend their time selling, not researching.
+            <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">Who we are</h2>
+            <p className="mt-6 text-2xl leading-snug text-slate-200 sm:text-[2rem]">
+              {brand.name} exists so sales teams can spend their time{' '}
+              <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-orange-300 bg-clip-text font-semibold text-transparent">
+                selling
+              </span>
+              , not researching.
             </p>
-            <p className="mt-4 max-w-xl leading-relaxed text-slate-600">
-              We pair always-on monitoring with the care of a research team. Every account we hand you comes with a
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
+              We pair always-on monitoring with the judgment of a research team. Every account we hand you comes with a
               reason to reach out, the evidence behind it and the right person to talk to.
             </p>
-            <a
-              href={demoHref}
-              {...demoLinkProps}
-              className="group mt-8 inline-flex items-center gap-3 rounded-full bg-slate-900 py-1.5 pl-5 pr-1.5 font-semibold text-white transition-transform hover:-translate-y-0.5"
-            >
-              Talk to the team
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 transition-transform duration-300 group-hover:rotate-45">
-                <ArrowUpRight className="h-4 w-4" />
-              </span>
-            </a>
           </motion.div>
 
-          <ul className="grid gap-4 sm:grid-cols-2">
+          <ul className="mt-14 grid gap-px overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/10 md:grid-cols-3">
             {principles.map(({ icon: Icon, title, text }, i) => (
               <motion.li
                 key={title}
-                initial={{ opacity: 0, y: 18 }}
+                initial={{ opacity: 0, y: 14 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="group rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-28px_rgba(79,70,229,0.45)]"
+                transition={{ duration: 0.5, delay: 0.1 + i * 0.08, ease }}
+                className="bg-[#0c0a24]/90 p-6 sm:p-8"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 transition-colors duration-300 group-hover:bg-indigo-600 group-hover:text-white">
-                  <Icon className="h-5 w-5" />
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-950/50">
+                  <Icon className="h-6 w-6" />
                 </span>
-                <h3 className="mt-5 text-lg font-bold text-slate-900">{title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{text}</p>
+                <h3 className="mt-5 text-lg font-semibold">{title}</h3>
+                <p className="mt-1.5 leading-relaxed text-slate-400">{text}</p>
               </motion.li>
             ))}
           </ul>
+
+          <a
+            href={demoHref}
+            {...demoLinkProps}
+            className="group mt-12 inline-flex items-center gap-3 rounded-full bg-white py-1.5 pl-6 pr-1.5 font-semibold text-slate-900 transition-transform hover:-translate-y-0.5"
+          >
+            Talk to the team
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white transition-transform duration-300 group-hover:rotate-45">
+              <ArrowUpRight className="h-4 w-4" />
+            </span>
+          </a>
         </div>
       </div>
     </section>
+  );
+}
+
+/** A line drawing of the globe from the logo, with one location lit up. */
+function GlobeLines({ className }: { className: string }) {
+  const parallels = [-60, -30, 0, 30, 60].map((dy) => ({ y: 100 + dy, half: Math.sqrt(96 * 96 - dy * dy) }));
+  return (
+    <svg viewBox="0 0 200 200" className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="0.6">
+      <circle cx="100" cy="100" r="96" />
+      {[26, 52, 78].map((rx) => (
+        <ellipse key={rx} cx="100" cy="100" rx={rx} ry="96" />
+      ))}
+      <line x1="100" y1="4" x2="100" y2="196" />
+      {parallels.map(({ y, half }) => (
+        <line key={y} x1={100 - half} y1={y} x2={100 + half} y2={y} />
+      ))}
+      <circle cx="128" cy="72" r="2.6" fill="#fb923c" stroke="none" />
+      <circle
+        cx="128"
+        cy="72"
+        r="6"
+        stroke="#fb923c"
+        strokeOpacity="0.7"
+        className="origin-center animate-ping [transform-box:fill-box]"
+      />
+    </svg>
   );
 }
