@@ -1,10 +1,11 @@
 import { brand } from '../../brand';
 
-export type LeadKind = 'demo' | 'top-accounts';
+export type LeadKind = 'demo' | 'event' | 'top-accounts';
 export type LeadResult = 'sent' | 'email' | 'error';
 
 const subjects: Record<LeadKind, string> = {
   demo: 'Demo request',
+  event: 'Event intelligence request',
   'top-accounts': 'Top accounts request',
 };
 

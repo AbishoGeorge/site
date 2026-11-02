@@ -1,11 +1,14 @@
 import {
+  CalendarCheck,
   ClipboardCheck,
   CreditCard,
   Factory,
   LayoutDashboard,
   ServerCog,
+  Presentation,
   ShieldCheck,
   Stethoscope,
+  Ticket,
   Truck,
   UsersRound,
   type LucideIcon,
@@ -22,6 +25,9 @@ export const industryIcon: Record<IndustryIcon, LucideIcon> = {
   health: Stethoscope,
   factory: Factory,
   erp: ClipboardCheck,
+  ticket: Ticket,
+  presentation: Presentation,
+  calendar: CalendarCheck,
 };
 
 /** Full class names per accent, so Tailwind can see them. `hex` is for SVG fills. */

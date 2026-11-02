@@ -7,15 +7,23 @@ import Logo from './Logo';
 
 const links = [
   { href: '#top', label: 'Home' },
+  { href: '#services', label: 'Services' },
   { href: '#use-cases', label: 'Use cases' },
-  { href: '#about', label: 'About' },
   { href: '#faq', label: 'FAQ' },
 ];
 
-// Sections with their own link; every other section of the page counts as Home, and the closing call to action
-// highlights nothing.
-const linkFor = (sectionId: string) =>
-  sectionId === 'contact' ? '' : (links.find((l) => l.href === `#${sectionId}`)?.href ?? '#top');
+// Which link each section of the page belongs to. The sections that explain account intelligence count as
+// Services; About and the closing call to action highlight nothing.
+const sectionLink: Record<string, string> = {
+  top: '#top',
+  services: '#services',
+  industries: '#services',
+  'live-accounts': '#services',
+  'what-you-get': '#services',
+  'use-cases': '#use-cases',
+  faq: '#faq',
+};
+const linkFor = (sectionId: string) => sectionLink[sectionId] ?? '';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);

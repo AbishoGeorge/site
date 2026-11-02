@@ -8,6 +8,10 @@ const faqs = [
     a: 'A database gives you every company that matches a filter. We give you the few that are showing buying signals right now, with the source and date for each signal, so your team knows why to reach out and what to say.',
   },
   {
+    q: 'How does event intelligence work?',
+    a: "Tell us the event and who you sell to. We gather who is attending from the event's speakers, sponsors, exhibitors and the people who announce they're going, keep only the ones who match your ideal customer, and send you each person with why they're likely to buy now and their verified email and phone, ahead of the event.",
+  },
+  {
     q: 'Which industries do you work with?',
     a: 'We work with B2B teams selling into cybersecurity, software, IT services, logistics, fintech, HR and staffing, healthcare, manufacturing and ERP testing. The signals we watch are tuned to each market, so a security vendor and an ERP testing company get very different lists.',
   },

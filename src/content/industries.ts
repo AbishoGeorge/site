@@ -6,7 +6,11 @@
  * The companies are described by what they sell rather than named, and there are no results figures.
  */
 
+// Artwork and icon keys are shared with the event use cases in events.ts.
 export type IndustryVisual =
+  | 'crowd'
+  | 'badge'
+  | 'calendar'
   | 'radar'
   | 'bars'
   | 'circuit'
@@ -17,6 +21,9 @@ export type IndustryVisual =
   | 'blueprint'
   | 'modules';
 export type IndustryIcon =
+  | 'ticket'
+  | 'presentation'
+  | 'calendar'
   | 'shield'
   | 'software'
   | 'server'

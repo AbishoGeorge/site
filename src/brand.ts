@@ -18,5 +18,8 @@ export const brand = {
 /** Where every "Book a demo" button points: the booking link if set, otherwise the on-site booking page. */
 export const demoHref = brand.demoUrl || '#book-demo';
 
+/** Where "Plan my next event" points: the booking link if set, otherwise the booking page set up for events. */
+export const eventHref = brand.demoUrl || '#book-demo-event';
+
 /** External booking links open in a new tab. */
 export const demoLinkProps = /^https?:\/\//.test(brand.demoUrl) ? { target: '_blank', rel: 'noopener noreferrer' } : {};

@@ -48,6 +48,12 @@ export function IndustryArt({
         return <BlueprintArt id={uid} />;
       case 'modules':
         return <ModulesArt id={uid} />;
+      case 'crowd':
+        return <CrowdArt id={uid} />;
+      case 'badge':
+        return <BadgeArt id={uid} />;
+      case 'calendar':
+        return <CalendarArt id={uid} />;
     }
   }, [visual, uid]);
 
@@ -452,6 +458,156 @@ function ModulesArt({ id }: { id: string }) {
         })
       )}
       <rect x={cols[1] - 9} y={rows[1] - 9} width={w + 18} height={h + 18} rx="19" fill="none" stroke="#fdba74" strokeOpacity="0.35" />
+    </>
+  );
+}
+
+function CrowdArt({ id }: { id: string }) {
+  // An event audience as rows of people, with the few who match the buyer profile lit up.
+  const rand = seeded(41);
+  const people: { x: number; y: number; r: number }[] = [];
+  for (let row = 0; row < 9; row++) {
+    const count = 9 + (row % 2);
+    for (let i = 0; i < count; i++) {
+      people.push({
+        x: 22 + i * 42 + (row % 2 ? 0 : 21) + (rand() - 0.5) * 8,
+        y: 64 + row * 30 + (rand() - 0.5) * 6,
+        r: 6 + rand() * 2.5,
+      });
+    }
+  }
+  const buyers = new Set([12, 27, 41, 58, 66]);
+  return (
+    <>
+      <rect width={W} height={H} fill="#1f0a16" />
+      <defs>
+        <radialGradient id={`${id}-glow`} cx="0.5" cy="0.32" r="0.75">
+          <stop offset="0%" stopColor="#e11d48" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#1f0a16" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${id}-glow)`} />
+      {people.map((p, k) =>
+        buyers.has(k) ? (
+          <g key={k}>
+            <circle cx={p.x} cy={p.y} r={p.r + 8} fill="none" stroke="#fdba74" strokeOpacity="0.45" />
+            <circle cx={p.x} cy={p.y} r={p.r} fill="#fb923c" />
+          </g>
+        ) : (
+          <circle key={k} cx={p.x} cy={p.y} r={p.r} fill="#fecdd3" opacity={0.14 + (k % 3) * 0.05} />
+        )
+      )}
+    </>
+  );
+}
+
+function BadgeArt({ id }: { id: string }) {
+  // A conference badge on its lanyard, marked as a match.
+  const rand = seeded(53);
+  const qr: [number, number][] = [];
+  for (let i = 0; i < 9; i++) for (let j = 0; j < 9; j++) if (rand() > 0.5) qr.push([i, j]);
+  const bx = 120;
+  const by = 112;
+  const bw = 160;
+  const bh = 206;
+  return (
+    <>
+      <rect width={W} height={H} fill="#1c1206" />
+      <defs>
+        <radialGradient id={`${id}-glow`} cx="0.5" cy="0.25" r="0.75">
+          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#1c1206" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${id}-glow)`} />
+      <path d={`M150 -10 L186 ${by + 2}`} stroke="#f59e0b" strokeWidth="10" strokeOpacity="0.55" />
+      <path d={`M250 -10 L214 ${by + 2}`} stroke="#f59e0b" strokeWidth="10" strokeOpacity="0.4" />
+      <rect x="186" y={by - 10} width="28" height="18" rx="4" fill="#78350f" stroke="#fbbf24" strokeOpacity="0.6" />
+      <rect x={bx} y={by} width={bw} height={bh} rx="14" fill="#fffbeb" fillOpacity="0.95" />
+      <path d={`M${bx} ${by + 14} a14 14 0 0 1 14 -14 h${bw - 28} a14 14 0 0 1 14 14 v30 h${-bw} Z`} fill="#f97316" />
+      <rect x={bx + 18} y={by + 60} width="96" height="10" rx="5" fill="#78350f" fillOpacity="0.8" />
+      <rect x={bx + 18} y={by + 78} width="64" height="7" rx="3.5" fill="#78350f" fillOpacity="0.4" />
+      {qr.map(([i, j], k) => (
+        <rect key={k} x={bx + 18 + i * 9} y={by + 102 + j * 9} width="8" height="8" fill="#1c1206" fillOpacity="0.85" />
+      ))}
+      <rect x={bx + 104} y={by + 150} width="44" height="22" rx="11" fill="#16a34a" />
+      <path
+        d={`M${bx + 117} ${by + 161} l4 4 l8 -8`}
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </>
+  );
+}
+
+function CalendarArt({ id }: { id: string }) {
+  // The days of an event with meetings already booked in.
+  const cols = 5;
+  const rows = 6;
+  const x0 = 52;
+  const y0 = 84;
+  const cw = 60;
+  const ch = 34;
+  const gap = 6;
+  const booked: Record<string, string> = {
+    '0-1': '#c026d3',
+    '1-3': '#c026d3',
+    '2-0': '#f97316',
+    '2-4': '#c026d3',
+    '3-2': '#c026d3',
+    '4-1': '#f97316',
+    '4-5': '#c026d3',
+    '1-5': '#c026d3',
+    '3-4': '#f97316',
+  };
+  return (
+    <>
+      <rect width={W} height={H} fill="#120a2a" />
+      <defs>
+        <radialGradient id={`${id}-glow`} cx="0.5" cy="0.3" r="0.75">
+          <stop offset="0%" stopColor="#a21caf" stopOpacity="0.38" />
+          <stop offset="100%" stopColor="#120a2a" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${id}-glow)`} />
+      {Array.from({ length: cols }, (_, c) => (
+        <rect key={c} x={x0 + c * (cw + gap)} y={y0 - 26} width={cw} height="14" rx="4" fill="#e9d5ff" fillOpacity="0.18" />
+      ))}
+      {Array.from({ length: rows }, (_, r) =>
+        Array.from({ length: cols }, (_, c) => {
+          const x = x0 + c * (cw + gap);
+          const y = y0 + r * (ch + gap);
+          const color = booked[`${c}-${r}`];
+          return (
+            <g key={`${c}-${r}`}>
+              <rect
+                x={x}
+                y={y}
+                width={cw}
+                height={ch}
+                rx="7"
+                fill={color ?? '#ffffff'}
+                fillOpacity={color ? 0.85 : 0.04}
+                stroke="#e9d5ff"
+                strokeOpacity={color ? 0 : 0.12}
+              />
+              {color && (
+                <path
+                  d={`M${x + 22} ${y + 17} l5 5 l10 -10`}
+                  fill="none"
+                  stroke="#fff"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </g>
+          );
+        })
+      )}
     </>
   );
 }

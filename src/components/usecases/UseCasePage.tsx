@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Building2, Check } from 'lucide-react';
-import { industries, type Industry } from '../../content/industries';
-import { demoHref, demoLinkProps } from '../../brand';
+import { serviceName, stories, storiesFor, type Story } from '../../content/stories';
+import { demoHref, demoLinkProps, eventHref } from '../../brand';
 import OverlayShell from '../overlay/OverlayShell';
 import { useHashOverlay } from '../overlay/useHashOverlay';
 import { TOP_ACCOUNTS_HASH } from '../accounts/AccountsFlow';
@@ -13,19 +13,20 @@ import { USE_CASE_HASH, linkToUseCase } from './links';
 
 export default function UseCasePage() {
   const { open, close, param } = useHashOverlay(USE_CASE_HASH);
-  const index = industries.findIndex((c) => c.id === param);
-  const industry = index >= 0 ? industries[index] : undefined;
-  const next = industries[(index + 1) % industries.length];
+  const story = stories.find((s) => s.id === param);
+  // "Next" stays within the same service.
+  const siblings = story ? storiesFor(story.service) : [];
+  const next = story ? siblings[(siblings.indexOf(story) + 1) % siblings.length] : undefined;
 
   return (
     <OverlayShell
-      open={open && !!industry}
+      open={open && !!story}
       onClose={close}
       backLabel="Back"
-      label={industry ? industry.useCase.title : 'Use case'}
+      label={story ? story.useCase.title : 'Use case'}
       scrollKey={param}
     >
-      {industry && <UseCase key={industry.id} industry={industry} next={next} />}
+      {story && next && <UseCase key={story.id} story={story} next={next} />}
     </OverlayShell>
   );
 }
@@ -38,11 +39,12 @@ const rise = (delay: number) => ({
 });
 
 /** One company's story, read top to bottom: the problem, how we solve it, the outcome. */
-function UseCase({ industry, next }: { industry: Industry; next: Industry }) {
-  const Icon = industryIcon[industry.icon];
+function UseCase({ story: item, next }: { story: Story; next: Story }) {
+  const Icon = industryIcon[item.icon];
   const NextIcon = industryIcon[next.icon];
-  const a = accentStyle[industry.accent];
-  const story = industry.useCase;
+  const a = accentStyle[item.accent];
+  const story = item.useCase;
+  const events = item.service === 'events';
 
   return (
     <article className="mx-auto max-w-4xl px-4 pb-16 pt-2 sm:px-6">
@@ -55,7 +57,7 @@ function UseCase({ industry, next }: { industry: Industry; next: Industry }) {
             <span className={`flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-white ${a.tile}`}>
               <Icon className="h-3.5 w-3.5" />
             </span>
-            {industry.name}
+            {serviceName[item.service]} · {item.tag}
           </motion.span>
           <motion.h1
             {...rise(0.06)}
@@ -73,7 +75,7 @@ function UseCase({ industry, next }: { industry: Industry; next: Industry }) {
           aria-hidden="true"
           className="relative hidden min-h-[220px] overflow-hidden rounded-[24px] bg-slate-900 md:block"
         >
-          <IndustryArt visual={industry.visual} align="top" className="absolute inset-0 h-full w-full" />
+          <IndustryArt visual={item.visual} align="top" className="absolute inset-0 h-full w-full" />
         </motion.div>
       </header>
 
@@ -84,7 +86,7 @@ function UseCase({ industry, next }: { industry: Industry; next: Industry }) {
         </Step>
         <Step n={2} tone={`bg-gradient-to-br ${a.tile}`} title="How we solve it" delay={0.24}>
           <p>{story.solution}</p>
-          <ul className="mt-4 flex flex-wrap gap-2" aria-label="Signals we use">
+          <ul className="mt-4 flex flex-wrap gap-2" aria-label={events ? 'What you get' : 'Signals we use'}>
             {story.signals.map((s) => {
               const SIcon = signalIcon(s);
               return (
@@ -115,15 +117,22 @@ function UseCase({ industry, next }: { industry: Industry; next: Industry }) {
         <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[radial-gradient(closest-side,rgba(129,140,248,0.4),transparent)]" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl font-bold sm:text-2xl">See these signals in your market</h2>
-            <p className="mt-1 text-slate-300">Preview your top accounts in a minute, or talk it through with us.</p>
+            <h2 className="text-xl font-bold sm:text-2xl">
+              {events ? 'Going to an event soon?' : 'See these signals in your market'}
+            </h2>
+            <p className="mt-1 text-slate-300">
+              {events
+                ? "Tell us which one. We'll show you the buyers in the room and how to reach them."
+                : 'Preview your top accounts in a minute, or talk it through with us.'}
+            </p>
           </div>
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
             <a
-              href={`#${TOP_ACCOUNTS_HASH}`}
+              href={events ? eventHref : `#${TOP_ACCOUNTS_HASH}`}
+              {...(events ? demoLinkProps : {})}
               className="group inline-flex items-center justify-center gap-3 rounded-full bg-white py-1.5 pl-5 pr-1.5 font-semibold text-slate-900 transition-transform hover:-translate-y-0.5"
             >
-              See my top accounts
+              {events ? 'Plan my next event' : 'See my top accounts'}
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white transition-transform duration-300 group-hover:rotate-45">
                 <ArrowUpRight className="h-4 w-4" />
               </span>
@@ -152,7 +161,7 @@ function UseCase({ industry, next }: { industry: Industry; next: Industry }) {
           <NextIcon className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-xs font-medium text-slate-500">Next use case · {next.name}</span>
+          <span className="block text-xs font-medium text-slate-500">Next use case · {next.tag}</span>
           <span className="block truncate font-semibold text-slate-900">{next.useCase.title}</span>
         </span>
         <ArrowRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-slate-700" />

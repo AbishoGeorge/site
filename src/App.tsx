@@ -1,6 +1,7 @@
 import { MotionConfig } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import Services from './components/Services';
 import Industries from './components/Industries';
 import LiveAccounts from './components/LiveAccounts';
 import WhatYouGet from './components/WhatYouGet';
@@ -19,6 +20,7 @@ export default function App() {
       <Navbar />
       <main className="pt-20">
         <Hero />
+        <Services />
         <Industries />
         <LiveAccounts />
         <WhatYouGet />

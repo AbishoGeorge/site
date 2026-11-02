@@ -1,5 +1,5 @@
 import { ArrowUp, ArrowUpRight } from 'lucide-react';
-import { brand, demoHref, demoLinkProps } from '../brand';
+import { brand, demoHref, demoLinkProps, eventHref } from '../brand';
 import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 import Logo from './Logo';
 
@@ -8,6 +8,7 @@ const columns = [
     title: 'Explore',
     links: [
       { href: '#top', label: 'Home' },
+      { href: '#services', label: 'Services' },
       { href: '#use-cases', label: 'Use cases' },
       { href: '#about', label: 'About' },
       { href: '#faq', label: 'FAQ' },
@@ -17,6 +18,7 @@ const columns = [
     title: 'Get started',
     links: [
       { href: `#${TOP_ACCOUNTS_HASH}`, label: 'See my top accounts' },
+      { href: eventHref, label: 'Plan my next event' },
       { href: demoHref, label: 'Book a demo' },
     ],
   },
