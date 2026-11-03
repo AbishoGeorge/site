@@ -2,9 +2,18 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "site",
   "compatibility_date": "2026-10-01",
-  // Static site: Vite builds into dist and Workers serves it as assets. The app's views open from the URL hash
-  // (#top-accounts, #book-demo, #use-case-...), so there are no client-side paths that need an index.html fallback.
+  // Handles POST /api/contact (emails form submissions through Resend). Everything else is the static site.
+  "main": "worker/index.ts",
   "assets": {
-    "directory": "./dist"
-  }
+    // Vite builds into dist. The app's views open from the URL hash (#top-accounts, #book-demo, #use-case-...),
+    // so there are no client-side paths that need an index.html fallback.
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Only API requests reach the Worker; pages and files are served straight from the assets.
+    "run_worker_first": ["/api/*"]
+  },
+  // CONTACT_TO_EMAIL and CONTACT_FROM_EMAIL are set in the Cloudflare dashboard, and RESEND_API_KEY is a secret.
+  // keep_vars stops each deploy from wiping the dashboard variables.
+  "keep_vars": true,
+  "observability": { "enabled": true }
 }

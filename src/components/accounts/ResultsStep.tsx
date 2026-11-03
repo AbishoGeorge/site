@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { brand } from '../../brand';
 import FloatField from '../overlay/FloatField';
-import { submitLead, type LeadResult } from '../overlay/lead';
+import Honeypot from '../overlay/Honeypot';
+import { HONEYPOT_FIELD, submitLead } from '../overlay/lead';
 import CompanyLogo from './CompanyLogo';
 
 interface PreviewRow {
@@ -190,7 +191,11 @@ function UnlockCard({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | LeadResult>('idle');
+  const [trap, setTrap] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorText, setErrorText] = useState('');
+  // Guards against a second submit before React has re-rendered with the disabled button.
+  const sending = useRef(false);
   const firstField = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -199,15 +204,25 @@ function UnlockCard({
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (sending.current) return;
     if (!e.currentTarget.reportValidity()) return;
+    sending.current = true;
     setStatus('sending');
-    const result = await submitLead('top-accounts', { Name: name, Email: email, Phone: phone, Website: domain });
-    setStatus(result);
+    const result = await submitLead('top-accounts', {
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      website: domain,
+      [HONEYPOT_FIELD]: trap,
+    });
+    sending.current = false;
+    setErrorText(result.status === 'error' ? (result.message ?? '') : '');
+    setStatus(result.status);
     // Once sent, phones go back to showing the list above the confirmation.
-    if (result !== 'error') onFormOpen(false);
+    if (result.status === 'sent') onFormOpen(false);
   };
 
-  if (status === 'sent' || status === 'email') {
+  if (status === 'sent') {
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -217,22 +232,10 @@ function UnlockCard({
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300">
           <Check className="h-6 w-6" />
         </span>
-        {status === 'sent' ? (
-          <>
-            <h2 className="mt-4 text-2xl font-bold">You're all set</h2>
-            <p className="mt-2 text-slate-300">
-              We'll research your top 10 accounts for {domain} and send them to {email}.
-            </p>
-          </>
-        ) : (
-          <>
-            <h2 className="mt-4 text-2xl font-bold">One more step</h2>
-            <p className="mt-2 text-slate-300">
-              Your email app should have opened with your details. Send that email and we'll build your list. If
-              nothing opened, write to <span className="select-all font-medium text-white">{brand.email}</span>.
-            </p>
-          </>
-        )}
+        <h2 className="mt-4 text-2xl font-bold">You're all set</h2>
+        <p className="mt-2 text-slate-300">
+          We'll research your top 10 accounts for {domain} and send them to {email}.
+        </p>
       </motion.div>
     );
   }
@@ -282,8 +285,10 @@ function UnlockCard({
 
       <form
         onSubmit={submit}
+        aria-busy={status === 'sending'}
         className={`relative mt-4 space-y-2.5 sm:mt-5 sm:block sm:space-y-3 ${formOpen ? '' : 'hidden'}`}
       >
+        <Honeypot value={trap} onChange={setTrap} />
         <div ref={firstField}>
           <FloatField id="unlock-name" tone="dark" label="Full name" value={name} onChange={setName} autoComplete="name" required />
         </div>
@@ -317,7 +322,7 @@ function UnlockCard({
         </button>
         {status === 'error' && (
           <p role="alert" className="text-sm text-red-300">
-            That didn't go through. Please try again, or email {brand.email}.
+            {errorText || "That didn't go through. Please try again."} If it keeps happening, email {brand.email}.
           </p>
         )}
         <p className="text-center text-xs text-slate-400">We only use your details to send your list.</p>

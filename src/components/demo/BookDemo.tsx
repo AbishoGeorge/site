@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -19,7 +19,8 @@ import { brand } from '../../brand';
 import FloatField, { FloatTextArea } from '../overlay/FloatField';
 import OverlayShell from '../overlay/OverlayShell';
 import { useHashOverlay } from '../overlay/useHashOverlay';
-import { submitLead, type LeadResult } from '../overlay/lead';
+import Honeypot from '../overlay/Honeypot';
+import { HONEYPOT_FIELD, submitLead } from '../overlay/lead';
 import { toDomain } from '../accounts/domain';
 
 /** Location hash that opens the booking page; #book-demo-event opens it set up for event intelligence. */
@@ -129,7 +130,11 @@ function DemoForm({ kind }: { kind: 'demo' | 'event' }) {
   const [message, setMessage] = useState('');
   const [emailError, setEmailError] = useState('');
   const [websiteError, setWebsiteError] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | LeadResult>('idle');
+  const [trap, setTrap] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorText, setErrorText] = useState('');
+  // Guards against a second submit before React has re-rendered with the disabled button.
+  const sending = useRef(false);
 
   // The company comes from the work email. Only a personal address needs the website asked for separately.
   const emailDomain = toDomain(email.split('@')[1] ?? '');
@@ -137,6 +142,7 @@ function DemoForm({ kind }: { kind: 'demo' | 'event' }) {
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (sending.current) return;
     if (!e.currentTarget.reportValidity()) return;
     if (!emailDomain) {
       setEmailError('Enter your work email, like name@yourcompany.com');
@@ -147,43 +153,34 @@ function DemoForm({ kind }: { kind: 'demo' | 'event' }) {
       setWebsiteError('Enter a website like yourcompany.com');
       return;
     }
+    sending.current = true;
     setStatus('sending');
-    setStatus(
-      await submitLead(kind, {
-        Name: name,
-        Email: email,
-        Website: domain,
-        'Team size': team,
-        [event ? 'Event' : 'Message']: message.trim(),
-      })
-    );
+    const result = await submitLead(kind, {
+      name: name.trim(),
+      email: email.trim(),
+      website: domain,
+      teamSize: team,
+      [event ? 'event' : 'message']: message.trim(),
+      [HONEYPOT_FIELD]: trap,
+    });
+    sending.current = false;
+    setErrorText(result.status === 'error' ? (result.message ?? '') : '');
+    setStatus(result.status);
   };
 
-  if (status === 'sent' || status === 'email') {
+  if (status === 'sent') {
     return (
       <div className="rounded-3xl bg-white p-8 shadow-[0_30px_80px_-40px_rgba(49,46,129,0.5)] ring-1 ring-slate-200 sm:p-10">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
           <Check className="h-7 w-7" />
         </span>
-        {status === 'sent' ? (
-          <>
-            <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900">
-              {event ? "We're on it" : "You're booked in"}
-            </h2>
-            <p className="mt-3 text-slate-600">
-              Thanks, {name.split(' ')[0]}. We'll email {email}{' '}
-              {event ? 'to talk through your event and the buyers you want to meet.' : 'to pick a time that suits you.'}
-            </p>
-          </>
-        ) : (
-          <>
-            <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900">One more step</h2>
-            <p className="mt-3 text-slate-600">
-              Your email app should have opened with your request. Send it and we'll get back to you to pick a time. If
-              nothing opened, write to <span className="select-all font-medium text-slate-900">{brand.email}</span>.
-            </p>
-          </>
-        )}
+        <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900">
+          {event ? "We're on it" : "You're booked in"}
+        </h2>
+        <p className="mt-3 text-slate-600">
+          Thanks, {name.split(' ')[0]}. We'll email {email}{' '}
+          {event ? 'to talk through your event and the buyers you want to meet.' : 'to pick a time that suits you.'}
+        </p>
       </div>
     );
   }
@@ -191,7 +188,8 @@ function DemoForm({ kind }: { kind: 'demo' | 'event' }) {
   return (
     <form
       onSubmit={submit}
-      className="rounded-3xl bg-white p-5 shadow-[0_30px_80px_-40px_rgba(49,46,129,0.5)] ring-1 ring-slate-200 sm:p-6 [@media(max-height:700px)]:p-5"
+      aria-busy={status === 'sending'}
+      className="relative rounded-3xl bg-white p-5 shadow-[0_30px_80px_-40px_rgba(49,46,129,0.5)] ring-1 ring-slate-200 sm:p-6 [@media(max-height:700px)]:p-5"
     >
       <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
         {event ? 'Plan your next event' : 'Book your demo'}
@@ -202,6 +200,7 @@ function DemoForm({ kind }: { kind: 'demo' | 'event' }) {
           : "It takes 30 seconds. We'll email you to pick a time."}
       </p>
 
+      <Honeypot value={trap} onChange={setTrap} />
       <div className="mt-4 space-y-2.5">
         <FloatField id="demo-name" label="Full name" value={name} onChange={setName} autoComplete="name" required />
         <FloatField
@@ -287,7 +286,7 @@ function DemoForm({ kind }: { kind: 'demo' | 'event' }) {
       </button>
       {status === 'error' && (
         <p role="alert" className="mt-3 text-sm text-red-600">
-          That didn't go through. Please try again, or email {brand.email}.
+          {errorText || "That didn't go through. Please try again."} If it keeps happening, email {brand.email}.
         </p>
       )}
       <p className="mt-3 text-balance text-center text-xs text-slate-500">

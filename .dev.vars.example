@@ -1,0 +1,4 @@
+# Copy to .dev.vars for `npx wrangler dev`. Never commit .dev.vars.
+RESEND_API_KEY=re_your_key_here
+CONTACT_TO_EMAIL=you@yourcompany.com
+CONTACT_FROM_EMAIL=Databery <hello@databery.com>

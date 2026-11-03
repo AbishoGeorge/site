@@ -1,36 +1,24 @@
-import { brand } from '../../brand';
-
 export type LeadKind = 'demo' | 'event' | 'top-accounts';
-export type LeadResult = 'sent' | 'email' | 'error';
+export type LeadResult = { status: 'sent' } | { status: 'error'; message?: string };
 
-const subjects: Record<LeadKind, string> = {
-  demo: 'Demo request',
-  event: 'Event intelligence request',
-  'top-accounts': 'Top accounts request',
-};
+/** Name of the hidden honeypot input; must match HONEYPOT in worker/index.ts. */
+export const HONEYPOT_FIELD = 'company_fax';
 
 /**
- * Send a form to `brand.formEndpoint` as JSON. With no endpoint configured, open the visitor's email app
- * addressed to `brand.email` with the details filled in, and report that so the page can say so.
+ * Send a form to the site's Worker at /api/contact, which checks it and emails it through Resend. Returns the
+ * Worker's own error message when it has one (for example "Enter a valid email address."), so the form can show it.
  */
 export async function submitLead(kind: LeadKind, data: Record<string, string>): Promise<LeadResult> {
-  if (!brand.formEndpoint) {
-    const body = Object.entries(data)
-      .filter(([, v]) => v)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join('\n');
-    const subject = `${subjects[kind]}${data.Website ? `: ${data.Website}` : ''}`;
-    window.location.href = `mailto:${brand.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    return 'email';
-  }
   try {
-    const res = await fetch(brand.formEndpoint, {
+    const res = await fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ type: kind, ...data }),
     });
-    return res.ok ? 'sent' : 'error';
+    if (res.ok) return { status: 'sent' };
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    return { status: 'error', message: body?.error };
   } catch {
-    return 'error';
+    return { status: 'error' };
   }
 }
