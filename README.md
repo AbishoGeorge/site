@@ -19,7 +19,7 @@ The Worker needs these in the Cloudflare dashboard (Workers & Pages → site →
 
 - `RESEND_API_KEY`: type **Secret**, your Resend API key.
 - `CONTACT_TO_EMAIL`: type **Text**, where submissions go (several addresses can be comma-separated).
-- `CONTACT_FROM_EMAIL`: type **Text**, the sender on a domain verified in Resend, for example `Databery <hello@databery.com>`.
+- `CONTACT_FROM_EMAIL`: type **Text**, the sender on a domain verified in Resend, for example `Databery <abisho@databery.com>`.
 
 `keep_vars` in `wrangler.jsonc` stops deploys from removing the dashboard variables. For `npx wrangler dev`, copy `.dev.vars.example` to `.dev.vars` (it is gitignored).
 

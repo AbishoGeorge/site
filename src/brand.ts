@@ -2,7 +2,7 @@
 export const brand = {
   name: 'Databery',
   tagline: 'Insights · Intelligence · Impact',
-  email: 'hello@databery.com',
+  email: 'abisho@databery.com',
   linkedin: 'https://www.linkedin.com/company/databery/',
   /**
    * Calendar or booking link for every "Book a demo" button, e.g. a Calendly URL.

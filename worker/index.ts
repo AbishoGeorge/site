@@ -5,7 +5,7 @@
  * Secrets and variables (set in the Cloudflare dashboard, never in code):
  *   RESEND_API_KEY      secret: the Resend API key
  *   CONTACT_TO_EMAIL    where submissions are sent
- *   CONTACT_FROM_EMAIL  the sender, on a domain verified in Resend, e.g. "Databery <hello@databery.com>"
+ *   CONTACT_FROM_EMAIL  the sender, on a domain verified in Resend, e.g. "Databery <abisho@databery.com>"
  */
 
 interface Env {
