@@ -29,7 +29,8 @@ export default function Footer() {
     <footer className="bg-slate-950 text-slate-400">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:px-8">
         <div className="text-white">
-          <Logo />
+          <Logo tone="dark" />
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300">{brand.tagline}</p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
             Evidence-backed accounts, the people to reach and the reason to reach them now.
           </p>

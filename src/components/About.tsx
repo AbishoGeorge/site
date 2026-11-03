@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowUpRight, FileCheck2, Timer, UsersRound } from 'lucide-react';
 import { brand, demoHref, demoLinkProps } from '../brand';
+import BerryOrb from './BerryOrb';
 
 // What we stand for. Add your own story here when you're ready: when and why you started, the team, where you work.
 const principles = [
@@ -35,29 +36,32 @@ export default function About() {
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-56 -right-24 -z-10 h-[560px] w-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(249,115,22,0.16),transparent)]"
         />
-        <GlobeLines className="pointer-events-none absolute -right-24 top-10 -z-10 hidden h-[560px] w-[560px] text-indigo-200/20 lg:block" />
 
         <div className="mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, ease }}
-            className="max-w-3xl"
-          >
-            <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">Who we are</h2>
-            <p className="mt-6 text-2xl leading-snug text-slate-200 sm:text-[2rem]">
-              {brand.name} exists so sales teams can spend their time{' '}
-              <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-orange-300 bg-clip-text font-semibold text-transparent">
-                selling
-              </span>
-              , not researching.
-            </p>
-            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-              We pair always-on monitoring with the judgment of a research team. Every account we hand you comes with a
-              reason to reach out, the evidence behind it and the right person to talk to.
-            </p>
-          </motion.div>
+          <div className="grid items-center gap-6 lg:grid-cols-[1.25fr_1fr] lg:gap-10">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.6, ease }}
+              className="max-w-3xl"
+            >
+              <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">Who we are</h2>
+              <p className="mt-6 text-2xl leading-snug text-slate-200 sm:text-[2rem]">
+                {brand.name} exists so sales teams can spend their time{' '}
+                <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-orange-300 bg-clip-text font-semibold text-transparent">
+                  selling
+                </span>
+                , not researching.
+              </p>
+              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
+                We pair always-on monitoring with the judgment of a research team. Every account we hand you comes with
+                a reason to reach out, the evidence behind it and the right person to talk to.
+              </p>
+            </motion.div>
+
+            <BerryOrb className="mx-auto block aspect-square w-full max-w-[300px] sm:max-w-[380px] lg:max-w-[460px]" />
+          </div>
 
           <ul className="mt-14 grid gap-px overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/10 md:grid-cols-3">
             {principles.map(({ icon: Icon, title, text }, i) => (
@@ -91,31 +95,5 @@ export default function About() {
         </div>
       </div>
     </section>
-  );
-}
-
-/** A line drawing of the globe from the logo, with one location lit up. */
-function GlobeLines({ className }: { className: string }) {
-  const parallels = [-60, -30, 0, 30, 60].map((dy) => ({ y: 100 + dy, half: Math.sqrt(96 * 96 - dy * dy) }));
-  return (
-    <svg viewBox="0 0 200 200" className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="0.6">
-      <circle cx="100" cy="100" r="96" />
-      {[26, 52, 78].map((rx) => (
-        <ellipse key={rx} cx="100" cy="100" rx={rx} ry="96" />
-      ))}
-      <line x1="100" y1="4" x2="100" y2="196" />
-      {parallels.map(({ y, half }) => (
-        <line key={y} x1={100 - half} y1={y} x2={100 + half} y2={y} />
-      ))}
-      <circle cx="128" cy="72" r="2.6" fill="#fb923c" stroke="none" />
-      <circle
-        cx="128"
-        cy="72"
-        r="6"
-        stroke="#fb923c"
-        strokeOpacity="0.7"
-        className="origin-center animate-ping [transform-box:fill-box]"
-      />
-    </svg>
   );
 }

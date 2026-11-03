@@ -13,7 +13,7 @@ npm run dev
 
 ## Make it yours
 
-- **Brand name, email and demo link:** `src/brand.ts`. Also update the `<title>` and meta tags in `index.html`, and the logo in `src/components/Logo.tsx` and `public/favicon.svg`.
+- **Brand name, tagline, email and demo link:** `src/brand.ts`. The Databery mark is drawn in `src/components/BerryMark.tsx` (used by `Logo.tsx`, and copied into `public/favicon.svg`); the 3D berry in Who we are is `src/components/BerryOrb.tsx`.
 - **Accounts shown on the globe:** `src/components/globe/signals.ts`. The companies there are fictional examples. Each entry's `country` must match a name in `world-atlas/countries-110m.json`, and `zoom` sets how far the globe zooms in.
 - **Globe timing and look:** constants at the top of `src/components/globe/GlobeEngine.ts`.
 - **Forms (book a demo, unlock top accounts):** the booking form takes the company website from the work email (and asks for it only when someone uses a personal address) and has an optional message box. Set `formEndpoint` in `src/brand.ts` to a form service URL that accepts a JSON POST (for example Formspree); each submission includes a `type` of `demo` or `top-accounts`. Until it is set, submitting opens the visitor's email app with their details, addressed to `email`. Set `demoUrl` to send every "Book a demo" button to a booking link (for example Calendly) instead of the on-site booking page.

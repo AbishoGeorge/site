@@ -1,22 +1,20 @@
-import { brand } from '../brand';
+import BerryMark from './BerryMark';
 
-export default function Logo({ className = '' }: { className?: string }) {
+/** Mark plus wordmark: "DATA" in the base color, "BERY" in the brand purple. */
+export default function Logo({ className = '', tone = 'light' }: { className?: string; tone?: 'light' | 'dark' }) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true">
-        <defs>
-          <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#4338ca" />
-          </linearGradient>
-        </defs>
-        <circle cx="16" cy="16" r="15" fill="url(#logo-g)" />
-        <ellipse cx="16" cy="16" rx="6.5" ry="15" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1" />
-        <path d="M1.5 12h29M1.5 20h29" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-        <circle cx="20.5" cy="11.5" r="3" fill="#fb923c" />
-        <circle cx="20.5" cy="11.5" r="5.5" fill="none" stroke="#fb923c" strokeOpacity="0.5" strokeWidth="1" />
-      </svg>
-      <span className="text-lg font-bold tracking-tight">{brand.name}</span>
+    <span className={`inline-flex items-center gap-2 ${className}`}>
+      <BerryMark tone={tone} className="h-9 w-9 -translate-y-0.5" />
+      <span className="font-display text-[1.15rem] font-semibold tracking-[0.14em]">
+        <span className={tone === 'dark' ? 'text-white' : 'text-[#1e1b4b]'}>DATA</span>
+        <span
+          className={`bg-gradient-to-r bg-clip-text text-transparent ${
+            tone === 'dark' ? 'from-violet-300 to-indigo-300' : 'from-violet-700 to-purple-600'
+          }`}
+        >
+          BERY
+        </span>
+      </span>
     </span>
   );
 }

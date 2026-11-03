@@ -1,7 +1,8 @@
 // Placeholder brand details. Replace these before launch; every page reads from here.
 export const brand = {
-  name: 'YourBrand',
-  email: 'hello@yourbrand.com',
+  name: 'Databery',
+  tagline: 'Insights · Intelligence · Impact',
+  email: 'hello@databery.com',
   /**
    * Calendar or booking link for every "Book a demo" button, e.g. a Calendly URL.
    * Leave empty to use the on-site booking form instead.
