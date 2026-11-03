@@ -11,6 +11,10 @@ npm run dev
 
 `npm run build` type-checks and writes a static site to `dist/`, which any static host (Vercel, Netlify, Cloudflare Pages) can serve.
 
+### Deploying to Cloudflare Workers
+
+`wrangler.jsonc` serves `dist/` as static assets on a Worker named `site`. With Workers Builds connected to this repo, use build command `npm run build`, deploy command `npx wrangler deploy` and root directory `/`. To check the config locally: `npm run build && npx wrangler deploy --dry-run`.
+
 ## Make it yours
 
 - **Brand name, tagline, email and demo link:** `src/brand.ts`. The Databery mark is drawn in `src/components/BerryMark.tsx` (used by `Logo.tsx`, and copied into `public/favicon.svg`); the 3D berry in Who we are is `src/components/BerryOrb.tsx`.

@@ -22,3 +22,6 @@ dist-ssr
 *.sw?
 .env
 dist-server
+
+# Wrangler local state
+.wrangler

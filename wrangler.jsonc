@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "site",
+  "compatibility_date": "2026-10-01",
+  // Static site: Vite builds into dist and Workers serves it as assets. The app's views open from the URL hash
+  // (#top-accounts, #book-demo, #use-case-...), so there are no client-side paths that need an index.html fallback.
+  "assets": {
+    "directory": "./dist"
+  }
+}
