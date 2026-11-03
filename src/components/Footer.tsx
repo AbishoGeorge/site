@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowUpRight } from 'lucide-react';
+import { ArrowUp, ArrowUpRight, Linkedin } from 'lucide-react';
 import { brand, demoHref, demoLinkProps, eventHref } from '../brand';
 import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
 import Logo from './Logo';
@@ -53,6 +53,17 @@ export default function Footer() {
           <h3 className="text-sm font-semibold text-white">Get in touch</h3>
           <a href={`mailto:${brand.email}`} className="mt-4 block text-sm transition-colors hover:text-white">
             {brand.email}
+          </a>
+          <a
+            href={brand.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 text-sm transition-colors hover:text-white"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-[#0a66c2]">
+              <Linkedin className="h-4 w-4" />
+            </span>
+            Follow us on LinkedIn
           </a>
           <a
             href={demoHref}
