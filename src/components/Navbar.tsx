@@ -60,7 +60,7 @@ export default function Navbar() {
         }`}
       >
         <a href="#top" className="text-slate-900" aria-label={`${brand.name} home`}>
-          <Logo />
+          <Logo animated />
         </a>
 
         <div className="hidden items-center gap-0.5 lg:flex">
