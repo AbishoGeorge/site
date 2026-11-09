@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type MouseEvent, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Building2, Check } from 'lucide-react';
 import { serviceName, stories, storiesFor, type Story } from '../../content/stories';
@@ -9,24 +9,60 @@ import { TOP_ACCOUNTS_HASH } from '../accounts/AccountsFlow';
 import { signalIcon } from '../signalIcon';
 import { IndustryArt } from './IndustryArt';
 import { accentStyle, industryIcon } from './industryStyle';
-import { USE_CASE_HASH, linkToUseCase } from './links';
+import { USE_CASE_HASH, openUseCase, pathToUseCase } from './links';
+import { useRoute } from '../../route';
+import { HOME_TITLE, pages } from '../../seo';
 
+/**
+ * A use case opens two ways: as a panel over the page from the URL hash (links inside the site), or as its own
+ * page at /use-cases/<id>/ (what search engines, AI tools and shared links load). The page is the same panel, open
+ * from the first render, so it is in the HTML that is built for that address.
+ */
 export default function UseCasePage() {
-  const { open, close, param } = useHashOverlay(USE_CASE_HASH);
-  const story = stories.find((s) => s.id === param);
+  const hash = useHashOverlay(USE_CASE_HASH);
+  const route = useRoute();
+  const routeId = route.useCase;
+  const id = hash.open ? hash.param : routeId;
+  const story = stories.find((s) => s.id === id);
   // "Next" stays within the same service.
   const siblings = story ? storiesFor(story.service) : [];
   const next = story ? siblings[(siblings.indexOf(story) + 1) % siblings.length] : undefined;
+  const asPage = !hash.open && !!routeId;
+  const { go } = route;
+
+  // If a panel opens from the hash on a use case's own page, the address goes back to the home page, so closing the
+  // panel lands there.
+  useEffect(() => {
+    if (hash.open && routeId) go('/' + window.location.hash);
+  }, [hash.open, routeId, go]);
+
+  const goTo = (path: string) => {
+    go(path);
+    document.title = pages.find((p) => p.path === path)?.title ?? HOME_TITLE;
+  };
+
+  // "Next use case" swaps use cases in place, so Back still leaves in one step. On a use case's own page it moves to
+  // the next one's page; in the panel it changes the hash.
+  const openNext = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!next) return;
+    if (!asPage) return openUseCase(e, next.id, true);
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    goTo(pathToUseCase(next.id));
+  };
 
   return (
     <OverlayShell
-      open={open && !!story}
-      onClose={close}
-      backLabel="Back"
+      open={!!story}
+      onClose={asPage ? () => goTo('/') : hash.close}
+      backLabel={asPage ? 'Home' : 'Back'}
       label={story ? story.useCase.title : 'Use case'}
-      scrollKey={param}
+      scrollKey={id}
+      appear={!asPage}
     >
-      {story && next && <UseCase key={story.id} story={story} next={next} />}
+      {story && next && (
+        <UseCase key={story.id} story={story} next={next} onNext={openNext} headingLevel={asPage ? 1 : 2} />
+      )}
     </OverlayShell>
   );
 }
@@ -39,7 +75,19 @@ const rise = (delay: number) => ({
 });
 
 /** One company's story, read top to bottom: the problem, how we solve it, the outcome. */
-function UseCase({ story: item, next }: { story: Story; next: Story }) {
+function UseCase({
+  story: item,
+  next,
+  onNext,
+  headingLevel,
+}: {
+  story: Story;
+  next: Story;
+  onNext: (e: MouseEvent<HTMLAnchorElement>) => void;
+  headingLevel: 1 | 2;
+}) {
+  const Title = headingLevel === 1 ? motion.h1 : motion.h2;
+  const Sub = headingLevel === 1 ? 'h2' : 'h3';
   const Icon = industryIcon[item.icon];
   const NextIcon = industryIcon[next.icon];
   const a = accentStyle[item.accent];
@@ -54,17 +102,19 @@ function UseCase({ story: item, next }: { story: Story; next: Story }) {
             {...rise(0)}
             className="flex w-fit items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200"
           >
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-white ${a.tile}`}>
+            <span
+              className={`flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-white ${a.tile}`}
+            >
               <Icon className="h-3.5 w-3.5" />
             </span>
             {serviceName[item.service]} · {item.tag}
           </motion.span>
-          <motion.h1
+          <Title
             {...rise(0.06)}
             className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-slate-900 sm:text-[2.5rem]"
           >
             {story.title}
-          </motion.h1>
+          </Title>
           <motion.p {...rise(0.12)} className="mt-4 flex items-start gap-2.5 text-slate-600">
             <Building2 className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
             {story.company}
@@ -81,10 +131,10 @@ function UseCase({ story: item, next }: { story: Story; next: Story }) {
 
       {/* The three steps share one line down the left, so the reading order is obvious. */}
       <ol className="relative mt-10 space-y-4 before:absolute before:bottom-10 before:left-6 before:top-10 before:hidden before:w-px before:bg-slate-200 sm:mt-12 sm:space-y-5 sm:before:block">
-        <Step n={1} tone="bg-rose-500" title="The problem" delay={0.16}>
+        <Step heading={Sub} n={1} tone="bg-rose-500" title="The problem" delay={0.16}>
           <p>{story.problem}</p>
         </Step>
-        <Step n={2} tone={`bg-gradient-to-br ${a.tile}`} title="How we solve it" delay={0.24}>
+        <Step heading={Sub} n={2} tone={`bg-gradient-to-br ${a.tile}`} title="How we solve it" delay={0.24}>
           <p>{story.solution}</p>
           <ul className="mt-4 flex flex-wrap gap-2" aria-label={events ? 'What you get' : 'Signals we use'}>
             {story.signals.map((s) => {
@@ -101,7 +151,7 @@ function UseCase({ story: item, next }: { story: Story; next: Story }) {
             })}
           </ul>
         </Step>
-        <Step n={3} tone="bg-emerald-500" title="The outcome" delay={0.32}>
+        <Step heading={Sub} n={3} tone="bg-emerald-500" title="The outcome" delay={0.32}>
           <ul className="space-y-2.5">
             {story.outcomes.map((o) => (
               <li key={o} className="flex items-start gap-2.5">
@@ -117,9 +167,9 @@ function UseCase({ story: item, next }: { story: Story; next: Story }) {
         <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[radial-gradient(closest-side,rgba(129,140,248,0.4),transparent)]" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl font-bold sm:text-2xl">
+            <Sub className="text-xl font-bold sm:text-2xl">
               {events ? 'Going to an event soon?' : 'See these signals in your market'}
-            </h2>
+            </Sub>
             <p className="mt-1 text-slate-300">
               {events
                 ? "Tell us which one. We'll show you the buyers in the room and how to reach them."
@@ -149,12 +199,8 @@ function UseCase({ story: item, next }: { story: Story; next: Story }) {
       </div>
 
       <a
-        href={linkToUseCase(next.id)}
-        onClick={(e) => {
-          // Swap use cases in place, so Back still returns to the page in one step.
-          e.preventDefault();
-          window.location.replace(linkToUseCase(next.id));
-        }}
+        href={pathToUseCase(next.id)}
+        onClick={onNext}
         className="group mt-4 flex items-center gap-4 rounded-[24px] bg-white p-4 ring-1 ring-slate-200 transition-colors hover:ring-slate-300 sm:p-5"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
@@ -171,12 +217,14 @@ function UseCase({ story: item, next }: { story: Story; next: Story }) {
 }
 
 function Step({
+  heading: Heading,
   n,
   tone,
   title,
   delay,
   children,
 }: {
+  heading: 'h2' | 'h3';
   n: number;
   tone: string;
   title: string;
@@ -193,7 +241,7 @@ function Step({
         {n}
       </span>
       <section className="min-w-0 flex-1 rounded-3xl bg-white p-5 ring-1 ring-slate-200 sm:p-7">
-        <h2 className="flex items-center gap-3 text-xl font-bold text-slate-900 sm:text-2xl">
+        <Heading className="flex items-center gap-3 text-xl font-bold text-slate-900 sm:text-2xl">
           <span
             aria-hidden="true"
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-base font-bold text-white sm:hidden ${tone}`}
@@ -201,7 +249,7 @@ function Step({
             {n}
           </span>
           {title}
-        </h2>
+        </Heading>
         <div className="mt-3 leading-relaxed text-slate-700 sm:text-[17px]">{children}</div>
       </section>
     </motion.li>

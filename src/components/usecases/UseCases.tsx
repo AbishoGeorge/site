@@ -2,7 +2,7 @@ import { ArrowRight, Radar, Ticket, type LucideIcon } from 'lucide-react';
 import { serviceName, storiesFor, type Service, type Story } from '../../content/stories';
 import { IndustryArt } from './IndustryArt';
 import { industryIcon } from './industryStyle';
-import { linkToUseCase } from './links';
+import { openUseCase, pathToUseCase } from './links';
 import { showUseCases, useShownService } from './serviceTab';
 
 const services: { id: Service; icon: LucideIcon }[] = [
@@ -80,7 +80,8 @@ function UseCaseCard({ story, tabIndex }: { story: Story; tabIndex?: number }) {
   const Icon = industryIcon[story.icon];
   return (
     <a
-      href={linkToUseCase(story.id)}
+      href={pathToUseCase(story.id)}
+      onClick={(e) => openUseCase(e, story.id)}
       tabIndex={tabIndex}
       className="group relative block h-[420px] w-[290px] overflow-hidden rounded-[28px] bg-slate-900 text-white shadow-[0_24px_60px_-30px_rgba(15,23,42,0.7)] transition-transform duration-500 hover:-translate-y-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500 sm:h-[480px] sm:w-[360px]"
     >

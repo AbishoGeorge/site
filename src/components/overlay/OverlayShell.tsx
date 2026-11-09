@@ -16,6 +16,8 @@ interface OverlayShellProps {
   step?: number;
   /** Changing this scrolls the panel back to the top, e.g. when moving between steps or use cases. */
   scrollKey?: string | number;
+  /** False when the panel is already open as the page loads (a use case's own page): it shows without rising in. */
+  appear?: boolean;
   children: ReactNode;
 }
 
@@ -32,6 +34,7 @@ export default function OverlayShell({
   steps,
   step = 0,
   scrollKey,
+  appear = true,
   children,
 }: OverlayShellProps) {
   const backRef = useRef<HTMLButtonElement>(null);
@@ -64,7 +67,7 @@ export default function OverlayShell({
   const progress = steps ? (step + 1) / steps.length : 1;
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={appear}>
       {open && (
         <>
           <motion.div

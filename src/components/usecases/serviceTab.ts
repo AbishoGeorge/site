@@ -17,6 +17,7 @@ export function useShownService() {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    () => current
+    () => current,
+    (): Service => 'accounts'
   );
 }

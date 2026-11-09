@@ -5,8 +5,8 @@
   // Handles POST /api/contact (emails form submissions through Resend). Everything else is the static site.
   "main": "worker/index.ts",
   "assets": {
-    // Vite builds into dist. The app's views open from the URL hash (#top-accounts, #book-demo, #use-case-...),
-    // so there are no client-side paths that need an index.html fallback.
+    // `npm run build` writes every public page to dist as finished HTML (/, /use-cases/<id>/), plus robots.txt,
+    // sitemap.xml and llms.txt. Panels inside the page open from the URL hash, so no index.html fallback is needed.
     "directory": "./dist",
     "binding": "ASSETS",
     // Only API requests reach the Worker; pages and files are served straight from the assets.

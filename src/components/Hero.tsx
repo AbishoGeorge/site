@@ -3,6 +3,7 @@ import { ArrowUpRight, Search } from 'lucide-react';
 import SignalGlobe from './globe/SignalGlobe';
 import { demoHref, demoLinkProps } from '../brand';
 import { TOP_ACCOUNTS_HASH } from './accounts/AccountsFlow';
+import { useRoute } from '../route';
 
 const headline = ["Know who's", 'ready to buy.', 'And exactly why.'];
 
@@ -13,6 +14,8 @@ const fadeUp = (delay: number) => ({
 });
 
 export default function Hero() {
+  // On a use case's own page that use case's title is the page's h1, so the hero steps down a level.
+  const Heading = useRoute().useCase ? 'h2' : 'h1';
   return (
     <section id="top" className="scroll-mt-20 px-2 pt-2 sm:px-4 sm:pt-4">
       <div className="relative isolate mx-auto flex max-w-[1600px] flex-col overflow-hidden rounded-[28px] bg-[color:var(--hero-bg)] ring-1 ring-indigo-200/70 xl:block xl:h-[clamp(700px,calc(100svh-104px),860px)]">
@@ -30,7 +33,7 @@ export default function Hero() {
         <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[50%] bg-[linear-gradient(to_right,var(--hero-bg)_0%,color-mix(in_srgb,var(--hero-bg)_88%,transparent)_45%,transparent_100%)] xl:block" />
 
         <div className="relative z-10 order-1 px-6 pt-14 sm:px-10 sm:pt-20 xl:flex xl:h-full xl:max-w-[700px] xl:flex-col xl:justify-center xl:px-16 xl:pb-10 xl:pt-0">
-          <h1 className="text-[2.35rem] font-bold leading-[1.04] tracking-[-0.035em] text-slate-900 min-[400px]:text-[2.6rem] sm:text-6xl xl:text-[4.25rem]">
+          <Heading className="text-[2.35rem] font-bold leading-[1.04] tracking-[-0.035em] text-slate-900 min-[400px]:text-[2.6rem] sm:text-6xl xl:text-[4.25rem]">
             {headline.map((line, i) => (
               <motion.span
                 key={line}
@@ -46,7 +49,7 @@ export default function Hero() {
                 {line}
               </motion.span>
             ))}
-          </h1>
+          </Heading>
 
           <motion.div {...fadeUp(0.45)} className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a

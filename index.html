@@ -6,16 +6,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#1e1b4b" />
-    <title>Databery | Know who's ready to buy</title>
-    <meta name="description" content="See which accounts are ready to buy and why. We track funding, hiring, leadership changes, tech changes and filings, and hand you each account with its evidence and the right person to contact." />
-    <meta property="og:title" content="Databery | Know who's ready to buy" />
-    <meta property="og:description" content="Accounts showing buying signals right now, each with the evidence behind it and the right person to contact." />
+    <!--app-head-->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+    <!-- Without JavaScript nothing animates in, so the page is shown as it ends up. -->
+    <noscript><style>[style*="opacity:0"],[style*="opacity: 0"]{opacity:1!important;transform:none!important;filter:none!important}</style></noscript>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root"><!--app-html--></div>
+    <script type="module" src="/src/entry-client.tsx"></script>
   </body>
 </html>

@@ -33,7 +33,7 @@ export default function Services() {
           </h2>
           <p className="mt-4 text-lg text-slate-600">
             Use one or both. Each starts from your ideal customer and ends with the people to talk to, why now and how
-            to reach them.
+            to reach them. We work with B2B teams in the UK and India.
           </p>
         </div>
 

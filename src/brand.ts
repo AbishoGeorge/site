@@ -1,6 +1,8 @@
 // Placeholder brand details. Replace these before launch; every page reads from here.
 export const brand = {
   name: 'Databery',
+  /** The live address, no trailing slash. Canonical links, the sitemap and llms.txt are built from it. */
+  siteUrl: 'https://databery.com',
   tagline: 'Insights · Intelligence · Impact',
   email: 'abisho@databery.com',
   linkedin: 'https://www.linkedin.com/company/databery/',

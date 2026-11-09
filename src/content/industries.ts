@@ -1,6 +1,6 @@
 /**
  * The industries we serve and one use case for each. The Industries section after the hero and the Use cases strip
- * both read from this list, and each use case has its own page at #use-case-<id>.
+ * both read from this list, and each use case has its own page at /use-cases/<id>/ (and opens in place from #use-case-<id>).
  *
  * Each use case follows one company through one specific problem: what goes wrong, how we solve it and what changes.
  * The companies are described by what they sell rather than named, and there are no results figures.

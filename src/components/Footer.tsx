@@ -32,7 +32,8 @@ export default function Footer() {
           <Logo tone="dark" />
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300">{brand.tagline}</p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
-            Evidence-backed accounts, the people to reach and the reason to reach them now.
+            Account intelligence, event intelligence, ERP buying-intent research and qualified prospect databases for
+            B2B teams in the UK and India.
           </p>
         </div>
         {columns.map((c) => (

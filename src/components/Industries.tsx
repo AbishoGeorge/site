@@ -4,7 +4,7 @@ import { ArrowRight, UserRound } from 'lucide-react';
 import { industries, type Industry } from '../content/industries';
 import { signalIcon } from './signalIcon';
 import { accentStyle, industryIcon } from './usecases/industryStyle';
-import { linkToUseCase } from './usecases/links';
+import { openUseCase, pathToUseCase } from './usecases/links';
 
 const ADVANCE_MS = 7000;
 
@@ -219,7 +219,8 @@ function Board({ industry }: { industry: Industry }) {
             </ul>
           </div>
           <a
-            href={linkToUseCase(industry.id)}
+            href={pathToUseCase(industry.id)}
+            onClick={(e) => openUseCase(e, industry.id)}
             className="group inline-flex shrink-0 items-center gap-2.5 self-start rounded-full bg-slate-900 py-1.5 pl-4 pr-1.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 sm:self-auto"
           >
             Read the use case
