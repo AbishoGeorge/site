@@ -25,6 +25,20 @@ for (const page of pages) {
   console.log(`prerendered ${page.path}`);
 }
 
+// The homepage must be the finished page, not the empty app shell Vite writes first: stop the build otherwise, so a
+// shell can never be deployed.
+const home = await readFile(join(dist, 'index.html'), 'utf8');
+const checks = {
+  'canonical link': home.includes('<link rel="canonical" href="'),
+  'og:image tag': home.includes('<meta property="og:image"'),
+  'JSON-LD': home.includes('application/ld+json'),
+  'one h1': (home.match(/<h1[ >]/g) || []).length === 1,
+  'rendered body': !home.includes('<div id="root"></div>') && !home.includes('<!--app-html-->'),
+};
+const failed = Object.entries(checks).filter(([, ok]) => !ok).map(([name]) => name);
+if (failed.length) throw new Error(`dist/index.html is not the prerendered homepage (missing: ${failed.join(', ')})`);
+console.log('checked dist/index.html: prerendered homepage');
+
 await writeFile(join(dist, 'robots.txt'), robotsTxt());
 await writeFile(join(dist, 'sitemap.xml'), sitemapXml(new Date().toISOString().slice(0, 10)));
 await writeFile(join(dist, 'llms.txt'), llmsTxt());
