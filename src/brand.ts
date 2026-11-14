@@ -1,6 +1,8 @@
 // Placeholder brand details. Replace these before launch; every page reads from here.
 export const brand = {
   name: 'Databery',
+  /** The name with its trademark sign, for every place a person reads it. Structured data keeps the plain name. */
+  tm: 'Databery™',
   /** The live address, no trailing slash. Canonical links, the sitemap and llms.txt are built from it. */
   siteUrl: 'https://databery.com',
   tagline: 'Insights · Intelligence · Impact',

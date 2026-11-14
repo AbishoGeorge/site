@@ -48,7 +48,7 @@ export default function About() {
             >
               <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">Who we are</h2>
               <p className="mt-6 text-2xl leading-snug text-slate-200 sm:text-[2rem]">
-                {brand.name} exists so sales teams can spend their time{' '}
+                {brand.tm} exists so sales teams can spend their time{' '}
                 <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-orange-300 bg-clip-text font-semibold text-transparent">
                   selling
                 </span>

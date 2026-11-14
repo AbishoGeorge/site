@@ -33,7 +33,7 @@ export default function Footer() {
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300">{brand.tagline}</p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
             Account intelligence, event intelligence, ERP buying-intent research and qualified prospect databases for
-            B2B teams in the UK and India.
+            B2B teams worldwide.
           </p>
         </div>
         {columns.map((c) => (
@@ -81,7 +81,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-slate-500 sm:px-6 lg:px-8">
           <span>
-            © {brand.year} {brand.name}. All rights reserved.
+            © {brand.year} {brand.tm}. All rights reserved.
           </span>
           <a href="#top" className="group flex items-center gap-1.5 transition-colors hover:text-white">
             Back to top

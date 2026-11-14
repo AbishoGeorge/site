@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 const devHead = (): Plugin => ({
   name: 'dev-head',
   apply: 'serve',
-  transformIndexHtml: (html) => html.replace('<!--app-head-->', "<title>Databery | Know who's ready to buy</title>"),
+  transformIndexHtml: (html) => html.replace('<!--app-head-->', "<title>Databery™ | Know who's ready to buy</title>"),
 });
 
 export default defineConfig({

@@ -10,9 +10,9 @@ import { pathToUseCase } from './components/usecases/links';
  */
 
 const site = brand.siteUrl;
-export const HOME_TITLE = "Databery | Know who's ready to buy";
+export const HOME_TITLE = "Databery™ | Know who's ready to buy";
 const HOME_DESCRIPTION =
-  'Databery finds the B2B accounts that are ready to buy and why. We track funding, hiring, leadership changes, tech changes and filings, and hand you each account with its evidence and the right person to contact. For teams in the UK and India.';
+  'Databery™ finds the B2B accounts that are ready to buy and why. We track funding, hiring, leadership changes, tech changes and filings, and hand you each account with its evidence and the right person to contact. For B2B teams worldwide.';
 
 /** What we sell, as the site, the structured data and llms.txt describe it. */
 export const offerings = [
@@ -49,7 +49,8 @@ export const signals = [
   'Company news',
 ];
 
-export const markets = ['United Kingdom', 'India'];
+/** We work with B2B teams anywhere in the world. */
+const areaServed = { '@type': 'Place', name: 'Worldwide' };
 
 export interface Page {
   path: string;
@@ -77,12 +78,12 @@ const organization = {
   description: HOME_DESCRIPTION,
   email: brand.email,
   sameAs: [brand.linkedin],
-  areaServed: markets.map((name) => ({ '@type': 'Country', name })),
+  areaServed,
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'sales',
     email: brand.email,
-    areaServed: ['GB', 'IN'],
+    areaServed,
   },
 };
 
@@ -92,7 +93,7 @@ const services = offerings.map((o) => ({
   serviceType: o.name,
   description: o.description,
   provider: { '@id': `${site}/#organization` },
-  areaServed: markets.map((name) => ({ '@type': 'Country', name })),
+  areaServed,
   audience: {
     '@type': 'BusinessAudience',
     audienceType: 'B2B sales and marketing teams',
@@ -132,7 +133,7 @@ function useCasePage(story: Story): Page {
   const service = offerings.find((o) => o.name === serviceName[story.service])!;
   return {
     path,
-    title: `${story.useCase.title} | ${brand.name}`,
+    title: `${story.useCase.title} | ${brand.tm}`,
     description: clip(`${story.tag}: ${story.useCase.problem}`),
     jsonLd: [
       organization,
@@ -189,14 +190,14 @@ export function headTags(page: Page) {
     `<meta name="description" content="${esc(page.description)}" />`,
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:type" content="${page.path === '/' ? 'website' : 'article'}" />`,
-    `<meta property="og:site_name" content="${brand.name}" />`,
+    `<meta property="og:site_name" content="${brand.tm}" />`,
     `<meta property="og:title" content="${esc(page.title)}" />`,
     `<meta property="og:description" content="${esc(page.description)}" />`,
     `<meta property="og:url" content="${url}" />`,
     `<meta property="og:image" content="${image}" />`,
     `<meta property="og:image:width" content="1200" />`,
     `<meta property="og:image:height" content="630" />`,
-    `<meta property="og:image:alt" content="${brand.name}: ${esc(brand.tagline)}" />`,
+    `<meta property="og:image:alt" content="${brand.tm}: ${esc(brand.tagline)}" />`,
     `<meta property="og:locale" content="en_US" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${esc(page.title)}" />`,
@@ -247,9 +248,9 @@ export function llmsTxt() {
     stories
       .filter((s) => s.service === service)
       .map((s) => `- [${s.useCase.title}](${abs(pathToUseCase(s.id))}): ${s.tag}. ${clip(s.useCase.problem, 180)}`);
-  return `# ${brand.name}
+  return `# ${brand.tm}
 
-> ${brand.name} (${brand.tagline}) tells B2B sales and marketing teams which accounts are ready to buy and why. We track public buying signals, score accounts against your ideal customer, and hand over each account with its evidence, the right person to contact and how to reach them. We work with B2B teams in the UK and India.
+> ${brand.tm} (${brand.tagline}) tells B2B sales and marketing teams which accounts are ready to buy and why. We track public buying signals, score accounts against your ideal customer, and hand over each account with its evidence, the right person to contact and how to reach them. We work with B2B teams worldwide, wherever their buyers are.
 
 ## What we offer
 
@@ -261,7 +262,7 @@ ${signals.map((s, i) => (i ? s.toLowerCase() : s)).join(', ')}. Every signal on 
 
 ## Markets
 
-${markets.join(' and ')}. Industries we serve: ${industries.map((i) => i.name).join(', ')}.
+Worldwide: we work with B2B teams in any country and track signals wherever their buyers are. Industries we serve: ${industries.map((i) => i.name).join(', ')}.
 
 ## How it works
 

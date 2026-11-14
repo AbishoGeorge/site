@@ -30,6 +30,13 @@ export default function Logo({
         >
           BERY
         </span>
+        <sup
+          className={`ml-0.5 align-super text-[0.5em] font-medium tracking-normal ${
+            tone === 'dark' ? 'text-violet-300' : 'text-violet-700'
+          }`}
+        >
+          ™
+        </sup>
       </span>
     </span>
   );
